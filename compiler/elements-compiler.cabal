@@ -1,0 +1,47 @@
+cabal-version: 3.0
+
+name:           elements-compiler
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/tanaka-de-silva/elements#readme>
+author:         Tanaka de Silva
+maintainer:     tanaka@biscuitcrumbs.com
+copyright:      2021 Tanaka de Silva
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_elements_compiler
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable compiler-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_elements_compiler
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , elements-compiler
+  default-language: Haskell2010
+
+test-suite compiler-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_elements_compiler
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , elements-compiler
+  default-language: Haskell2010
