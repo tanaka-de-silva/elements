@@ -9,10 +9,20 @@ let
   pkgs = import
     haskellNix.sources.nixpkgs-unstable
     haskellNix.nixpkgsArgs;
-in
-pkgs.haskell-nix.project {
-  src = pkgs.haskell-nix.haskellLib.cleanGit {
-    name = "elements-compiler";
-    src = ./.;
+
+  project = pkgs.haskell-nix.project {
+    src = pkgs.haskell-nix.haskellLib.cleanGit {
+      name = "elements-compiler";
+      src = ./.;
+    };
+    modules = [
+      {
+        # https://github.com/input-output-hk/haskell.nix/issues/231
+        packages.elements-compiler.components.tests.compiler-test.build-tools = [
+          project.hspec-discover
+        ];
+      }
+    ];
   };
-}
+in
+project

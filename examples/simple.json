@@ -1,0 +1,15 @@
+{
+    "bytecodes": [
+        {
+            "tag": "PushInt",
+            "contents": 1
+        },
+        {
+            "tag": "PushInt",
+            "contents": 2
+        },
+        {
+            "tag": "Add"
+        }
+    ]
+}

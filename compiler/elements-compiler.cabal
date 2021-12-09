@@ -12,14 +12,31 @@ extra-source-files:
 
 library
   exposed-modules:
-      Lib
-  other-modules:
-      Paths_elements_compiler
+      Elements.Compiler
+    , Elements.Compiler.Fragment
+    , Elements.AST
+    , Elements.Bytecode
+    , Elements.Compiler.Types
+    , Elements.Parser
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , aeson
+    , aeson-pretty
+    , bytestring
+    , dlist
+    , filepath
+    , megaparsec
+    , parser-combinators
+    , text
   default-language: Haskell2010
+  default-extensions: 
+      DerivingStrategies
+    , DeriveAnyClass
+    , DeriveGeneric
+    , LambdaCase
+    , OverloadedStrings
 
 executable compiler-exe
   main-is: Main.hs
@@ -37,11 +54,24 @@ test-suite compiler-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_elements_compiler
+      Elements.Compiler.FragmentSpec 
+    , Elements.CompilerSpec
+    , Elements.ParserSpec 
+    , Elements.Syntax
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , hspec
+    , hspec-discover
+    , megaparsec
+    , text
     , elements-compiler
   default-language: Haskell2010
+  default-extensions: 
+      DerivingStrategies
+    , DeriveAnyClass
+    , DeriveGeneric
+    , LambdaCase
+    , OverloadedStrings

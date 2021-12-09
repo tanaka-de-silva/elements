@@ -1,6 +1,9 @@
 module Main where
 
-import           Lib                            ( hello )
+import           Elements.Compiler              ( compile )
+import qualified System.Environment            as System
 
 main :: IO ()
-main = hello
+main = do
+  sourcePath <- head <$> System.getArgs
+  compile sourcePath
