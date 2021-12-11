@@ -35,7 +35,10 @@ pInteger :: Parser Expression
 pInteger = NumericLiteral . AST.IntValue <$> lexeme MCL.decimal
 
 operatorTable :: [[Operator Parser Expression]]
-operatorTable = [[binary "+" AST.add, binary "-" AST.subtract]]
+operatorTable =
+  [ [prefix "-" Negate, prefix "+" id]
+  , [binary "+" AST.add, binary "-" AST.subtract]
+  ]
 
 pExpression :: Parser Expression
 pExpression = makeExprParser pInteger operatorTable
@@ -45,3 +48,6 @@ binary
   -> (Expression -> Expression -> Expression)
   -> Operator Parser Expression
 binary name f = InfixL (f <$ symbol name)
+
+prefix :: Text -> (Expression -> Expression) -> Operator Parser Expression
+prefix name f = Prefix (f <$ symbol name)

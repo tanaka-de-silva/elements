@@ -20,6 +20,11 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
         let result = lhs - rhs;
         stack.push(result)
       }
+      Some(Bytecode::Negate) => {
+        let value = stack.pop().unwrap();
+        let result = -value;
+        stack.push(result)
+      }
       Some(Bytecode::PushInt(x)) => stack.push(*x),
     };
     program_counter += 1;
@@ -46,5 +51,12 @@ mod tests {
     ];
     let result = evalute(&bytecodes);
     assert_eq!(result, 1);
+  }
+
+  #[test]
+  fn can_negate_a_number() {
+    let bytecodes = vec![Bytecode::PushInt(1), Bytecode::Negate];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, -1);
   }
 }

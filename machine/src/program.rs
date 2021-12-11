@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub enum Bytecode {
   Add,
   Subtract,
+  Negate,
   PushInt(i32),
 }
 

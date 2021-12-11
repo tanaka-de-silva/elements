@@ -7,5 +7,6 @@ import           GHC.Int                        ( Int32 )
 data Bytecode = PushInt Int32
               | Add
               | Subtract
+              | Negate
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)

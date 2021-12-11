@@ -46,6 +46,8 @@ compileExpression = \case
       (arithmeticOpBytecode op)
       (compileExpression lhs)
       (compileExpression rhs)
+  AST.Negate expr ->
+    Fragment.append Bytecode.Negate $ compileExpression expr
 
 parseFromFile :: FilePath -> IO (Either TextParseError AST.Expression)
 parseFromFile filePath =

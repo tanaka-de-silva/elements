@@ -37,8 +37,16 @@ subtraction =
       expected = [Bytecode.PushInt 3, Bytecode.PushInt 1, Bytecode.Subtract]
   in  result `shouldBe` expected
 
+negation :: IO ()
+negation =
+  let program  = AST.Negate (int 1)
+      result   = testExpression program
+      expected = [Bytecode.PushInt 1, Bytecode.Negate]
+  in  result `shouldBe` expected
+
 spec :: Spec
 spec = do
   it "can push integer values on to the stack" pushIntegersValues
   it "can add two numbers together"            addition
   it "can subtract one number from another"    subtraction
+  it "can negate a number"                     negation

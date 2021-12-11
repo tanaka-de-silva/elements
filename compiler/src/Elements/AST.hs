@@ -23,6 +23,7 @@ data BinaryOp' = BinaryOp'
 
 data Expression = NumericLiteral NumericValue
                 | BinaryOp BinaryOp'
+                | Negate Expression
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
