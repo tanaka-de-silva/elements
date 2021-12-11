@@ -26,7 +26,9 @@ pushNumericValue :: AST.NumericValue -> Bytecode
 pushNumericValue (AST.IntValue x) = Bytecode.PushInt x
 
 arithmeticOpBytecode :: AST.ArithmeticOp -> Bytecode
-arithmeticOpBytecode AST.Add = Bytecode.Add
+arithmeticOpBytecode  = \case 
+  AST.Add -> Bytecode.Add
+  AST.Subtract -> Bytecode.Subtract
 
 combineBinOpFragments
   :: Bytecode -> Fragment Bytecode -> Fragment Bytecode -> Fragment Bytecode

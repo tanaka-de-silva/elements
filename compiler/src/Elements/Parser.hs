@@ -35,7 +35,7 @@ pInteger :: Parser Expression
 pInteger = NumericLiteral . AST.IntValue <$> lexeme MCL.decimal
 
 operatorTable :: [[Operator Parser Expression]]
-operatorTable = [[binary "+" AST.add]]
+operatorTable = [[binary "+" AST.add, binary "-" AST.subtract]]
 
 pExpression :: Parser Expression
 pExpression = makeExprParser pInteger operatorTable

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "tag", content = "contents")]
 pub enum Bytecode {
   Add,
+  Subtract,
   PushInt(i32),
 }
 

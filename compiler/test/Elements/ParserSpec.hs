@@ -22,6 +22,7 @@ parseIntegers = parseExpr "1" `shouldBe` Right (int 1)
 parseBinaryArithmetic :: IO ()
 parseBinaryArithmetic = do
   parseExpr "1 + 2" `shouldBe` Right (AST.add (int 1) (int 2))
+  parseExpr "3 - 1" `shouldBe` Right (AST.subtract (int 3) (int 1))
 
 spec :: Spec
 spec = do

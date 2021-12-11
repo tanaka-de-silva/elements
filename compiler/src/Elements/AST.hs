@@ -9,6 +9,7 @@ newtype NumericValue = IntValue Int32
   deriving anyclass (ToJSON)
 
 data ArithmeticOp = Add
+                  | Subtract
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
@@ -27,3 +28,6 @@ data Expression = NumericLiteral NumericValue
 
 add :: Expression -> Expression -> Expression
 add lhs rhs = BinaryOp $ BinaryOp' Add lhs rhs
+
+subtract :: Expression -> Expression -> Expression
+subtract lhs rhs = BinaryOp $ BinaryOp' Subtract lhs rhs
