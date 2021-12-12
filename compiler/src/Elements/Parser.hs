@@ -2,8 +2,7 @@ module Elements.Parser
   ( Parser
   , TextParseError
   , pExpression
-  )
-where
+  ) where
 
 import           Control.Monad.Combinators.Expr ( Operator(..)
                                                 , makeExprParser

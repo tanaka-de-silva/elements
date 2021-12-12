@@ -1,8 +1,8 @@
 module Elements.Compiler.Types where
 
 import           Data.Aeson                     ( ToJSON )
-import           GHC.Generics                   ( Generic )
 import           Elements.Bytecode              ( Bytecode )
+import           GHC.Generics                   ( Generic )
 
 newtype Program = Program
   { bytecodes :: [Bytecode]

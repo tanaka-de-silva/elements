@@ -1,7 +1,6 @@
 module Elements.CompilerSpec
   ( spec
-  )
-where
+  ) where
 
 import           Data.Text                      ( Text )
 import qualified Elements.AST                  as AST

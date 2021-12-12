@@ -1,7 +1,6 @@
 module Elements.Compiler.FragmentSpec
   ( spec
-  )
-where
+  ) where
 
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )

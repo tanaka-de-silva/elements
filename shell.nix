@@ -8,6 +8,7 @@ project.shellFor {
   tools = {
     cabal = "latest";
     hlint = "latest";
+    brittany = "0.13.1.2";
     haskell-language-server = "latest";
   };
 }

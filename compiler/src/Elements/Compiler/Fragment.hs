@@ -4,16 +4,15 @@ module Elements.Compiler.Fragment
   , singleton
   , toList
   , length
-  )
-where
+  ) where
 
-import           Prelude                 hiding ( length )
 import           Data.DList                     ( DList )
 import qualified Data.DList                    as DList
+import           Prelude                 hiding ( length )
 
 data Fragment a = Fragment
   { fragmentContents :: DList a
-  , fragmentLength :: Int
+  , fragmentLength   :: Int
   }
   deriving stock (Show, Eq)
 

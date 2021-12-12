@@ -1,15 +1,14 @@
 module Elements.ParserSpec
   ( spec
-  )
-where
+  ) where
 
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
 import qualified Elements.AST                  as AST
 import           Elements.Parser                ( TextParseError
                                                 , pExpression
                                                 )
 import           Elements.Syntax                ( int )
-import           Data.Text                      ( Text )
-import qualified Data.Text                     as Text
 import           Test.Hspec
 import qualified Text.Megaparsec               as Megaparsec
 

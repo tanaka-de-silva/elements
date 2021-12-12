@@ -14,12 +14,12 @@ data ArithmeticOp = Add
   deriving anyclass (ToJSON)
 
 data BinaryOp' = BinaryOp'
-  { binOp :: ArithmeticOp
+  { binOp    :: ArithmeticOp
   , binOpLhs :: Expression
   , binOpRhs :: Expression
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (ToJSON)
+  deriving anyclass ToJSON
 
 data Expression = NumericLiteral NumericValue
                 | BinaryOp BinaryOp'
