@@ -33,14 +33,36 @@ symbol = MCL.symbol spaceConsumer
 pInteger :: Parser Expression
 pInteger = NumericLiteral . AST.IntValue <$> lexeme MCL.decimal
 
+pBool :: Parser Expression
+pBool = lexeme $ trueParser <|> falseParser
+ where
+  trueParser  = BoolLiteral True <$ MC.string "true"
+  falseParser = BoolLiteral False <$ MC.string "false"
+
+pKeyword :: Text -> Parser Text
+pKeyword keyword = lexeme (MC.string keyword <* notFollowedBy MC.alphaNumChar)
+
 operatorTable :: [[Operator Parser Expression]]
 operatorTable =
   [ [prefix "-" Negate, prefix "+" id]
   , [binary "+" AST.add, binary "-" AST.subtract]
   ]
 
+pTerm :: Parser Expression
+pTerm = choice [pInteger, pBool]
+
 pExpression :: Parser Expression
-pExpression = makeExprParser pInteger operatorTable
+pExpression = makeExprParser pTerm operatorTable <|> pIfElse
+
+pIfElse :: Parser Expression
+pIfElse = do
+  pKeyword "if"
+  testCondition <- pExpression
+  pKeyword "then"
+  thenExpr <- pExpression
+  pKeyword "else"
+  elseExpr <- pExpression
+  return $ IfElse $ AST.IfElse' testCondition thenExpr elseExpr
 
 binary
   :: Text

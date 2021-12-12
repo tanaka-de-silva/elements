@@ -6,6 +6,8 @@ pub enum Bytecode {
   Add,
   Subtract,
   Negate,
+  BranchIfFalse(i32),
+  Goto(i32),
   PushInt(i32),
 }
 

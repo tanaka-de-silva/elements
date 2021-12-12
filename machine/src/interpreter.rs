@@ -25,6 +25,17 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
         let result = -value;
         stack.push(result)
       }
+      Some(Bytecode::Goto(i)) => {
+        program_counter += i;
+      }
+      Some(Bytecode::BranchIfFalse(i)) => match stack.pop() {
+        Some(x) => {
+          if x == 0 {
+            program_counter += i;
+          }
+        }
+        _ => unreachable!(),
+      },
       Some(Bytecode::PushInt(x)) => stack.push(*x),
     };
     program_counter += 1;
@@ -58,5 +69,47 @@ mod tests {
     let bytecodes = vec![Bytecode::PushInt(1), Bytecode::Negate];
     let result = evalute(&bytecodes);
     assert_eq!(result, -1);
+  }
+
+  #[test]
+  fn can_goto_an_instruction_offset() {
+    let bytecodes = vec![
+      Bytecode::Goto(2),
+      Bytecode::PushInt(1),
+      Bytecode::Negate,
+      Bytecode::PushInt(2),
+      Bytecode::PushInt(2),
+      Bytecode::Add,
+    ];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 4);
+  }
+
+  #[test]
+  fn can_branch_to_an_instruction_offset() {
+    let bytecodes = vec![
+      Bytecode::PushInt(0),
+      Bytecode::BranchIfFalse(2),
+      Bytecode::PushInt(1),
+      Bytecode::Negate,
+      Bytecode::PushInt(2),
+      Bytecode::PushInt(2),
+      Bytecode::Add,
+    ];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 4);
+  }
+
+  #[test]
+  fn continues_when_branch_condition_is_not_satisfied() {
+    let bytecodes = vec![
+      Bytecode::PushInt(7),
+      Bytecode::PushInt(1),
+      Bytecode::BranchIfFalse(2),
+      Bytecode::PushInt(1),
+      Bytecode::Negate,
+    ];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 7);
   }
 }

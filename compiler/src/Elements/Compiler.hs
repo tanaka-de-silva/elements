@@ -11,7 +11,9 @@ import qualified System.FilePath.Posix         as System
 import qualified Text.Megaparsec               as Megaparsec
 
 import qualified Elements.AST                  as AST
-import           Elements.Bytecode              ( Bytecode )
+import           Elements.Bytecode              ( Bytecode
+                                                , PCOffset(..)
+                                                )
 import qualified Elements.Bytecode             as Bytecode
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )
@@ -36,14 +38,35 @@ combineBinOpFragments opBytecode lhsFragment rhsFragment =
 bytecode :: Bytecode -> Fragment Bytecode
 bytecode = Fragment.singleton
 
+fragmentPCOffset :: Fragment a -> PCOffset
+fragmentPCOffset = PCOffset . fromIntegral . Fragment.length
+
+combineIfElseFragments
+  :: Fragment Bytecode
+  -> Fragment Bytecode
+  -> Fragment Bytecode
+  -> Fragment Bytecode
+combineIfElseFragments testFragment thenFragment elseFragment =
+  let branchToElse =
+        (Bytecode.BranchIfFalse . (+) 1 . fragmentPCOffset) thenFragment
+      gotoElseEnd = (Bytecode.Goto . fragmentPCOffset) elseFragment
+  in  Fragment.append branchToElse testFragment
+        <> Fragment.append gotoElseEnd thenFragment
+        <> elseFragment
+
 compileExpression :: AST.Expression -> Fragment Bytecode
 compileExpression = \case
   AST.NumericLiteral value -> bytecode $ pushNumericValue value
+  AST.BoolLiteral value -> bytecode $ Bytecode.PushInt $ if value then 1 else 0
+  AST.Negate expr -> Fragment.append Bytecode.Negate $ compileExpression expr
   AST.BinaryOp (AST.BinaryOp' op lhs rhs) -> combineBinOpFragments
     (arithmeticOpBytecode op)
     (compileExpression lhs)
     (compileExpression rhs)
-  AST.Negate expr -> Fragment.append Bytecode.Negate $ compileExpression expr
+  AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) ->
+    combineIfElseFragments (compileExpression testCondition)
+                           (compileExpression thenExpr)
+                           (compileExpression elseExpr)
 
 parseFromFile :: FilePath -> IO (Either TextParseError AST.Expression)
 parseFromFile filePath =

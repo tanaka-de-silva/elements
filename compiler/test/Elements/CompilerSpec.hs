@@ -15,12 +15,17 @@ import           Test.Hspec
 testExpression :: AST.Expression -> [Bytecode]
 testExpression = Fragment.toList . compileExpression
 
-pushIntegersValues :: IO ()
-pushIntegersValues =
+pushIntegerValue :: IO ()
+pushIntegerValue =
   let program  = int 1
       result   = testExpression program
       expected = [Bytecode.PushInt 1]
   in  result `shouldBe` expected
+
+pushBooleanValue :: IO ()
+pushBooleanValue = do
+  testExpression (AST.BoolLiteral False) `shouldBe`  [Bytecode.PushInt 0]
+  testExpression (AST.BoolLiteral True) `shouldBe`  [Bytecode.PushInt 1]
 
 addition :: IO ()
 addition =
@@ -43,9 +48,28 @@ negation =
       expected = [Bytecode.PushInt 1, Bytecode.Negate]
   in  result `shouldBe` expected
 
+simpleIfElse :: IO ()
+simpleIfElse =
+  let program = AST.IfElse $ AST.IfElse'
+        { AST.testCondition = AST.BoolLiteral True
+        , AST.thenExpr      = int 1
+        , AST.elseExpr      = int 0
+        }
+      result = testExpression program
+      expected =
+        [ Bytecode.PushInt 1
+        , Bytecode.BranchIfFalse 2
+        , Bytecode.PushInt 1
+        , Bytecode.Goto 1
+        , Bytecode.PushInt 0
+        ]
+  in  result `shouldBe` expected
+
 spec :: Spec
 spec = do
-  it "can push integer values on to the stack" pushIntegersValues
-  it "can add two numbers together"            addition
-  it "can subtract one number from another"    subtraction
-  it "can negate a number"                     negation
+  it "can push an integer value on to the stack" pushIntegerValue
+  it "can push a boolean value on to the stack"  pushBooleanValue
+  it "can add two numbers together"              addition
+  it "can subtract one number from another"      subtraction
+  it "can negate a number"                       negation
+  it "can handle simple if else expressions"     simpleIfElse

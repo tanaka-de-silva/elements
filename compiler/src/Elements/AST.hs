@@ -21,9 +21,19 @@ data BinaryOp' = BinaryOp'
   deriving stock (Show, Eq, Generic)
   deriving anyclass ToJSON
 
+data IfElse' = IfElse'
+  { testCondition :: Expression
+  , thenExpr      :: Expression
+  , elseExpr      :: Expression
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass ToJSON
+
 data Expression = NumericLiteral NumericValue
-                | BinaryOp BinaryOp'
+                | BoolLiteral Bool
                 | Negate Expression
+                | BinaryOp BinaryOp'
+                | IfElse IfElse'
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
