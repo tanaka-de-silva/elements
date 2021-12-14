@@ -30,6 +30,15 @@ arithmeticOpBytecode = \case
   AST.Add      -> Bytecode.Add
   AST.Subtract -> Bytecode.Subtract
 
+comparisonOpBytecode :: AST.ComparisonOp -> Bytecode
+comparisonOpBytecode = \case
+  AST.LessThan            -> Bytecode.LessThan
+  AST.LessThanOrEquals    -> Bytecode.LessThanOrEquals
+  AST.Equals              -> Bytecode.Equals
+  AST.GreaterThanOrEquals -> Bytecode.GreaterThanOrEquals
+  AST.GreaterThan         -> Bytecode.GreaterThan
+  AST.NotEquals           -> Bytecode.NotEquals
+
 combineBinOpFragments
   :: Bytecode -> Fragment Bytecode -> Fragment Bytecode -> Fragment Bytecode
 combineBinOpFragments opBytecode lhsFragment rhsFragment =
@@ -61,6 +70,10 @@ compileExpression = \case
   AST.Negate expr -> Fragment.append Bytecode.Negate $ compileExpression expr
   AST.BinaryOp (AST.BinaryOp' op lhs rhs) -> combineBinOpFragments
     (arithmeticOpBytecode op)
+    (compileExpression lhs)
+    (compileExpression rhs)
+  AST.Comparison (AST.Comparison' op lhs rhs) -> combineBinOpFragments
+    (comparisonOpBytecode op)
     (compileExpression lhs)
     (compileExpression rhs)
   AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) ->

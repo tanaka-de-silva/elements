@@ -11,6 +11,12 @@ data Bytecode = PushInt Int32
               | Add
               | Subtract
               | Negate
+              | LessThan
+              | LessThanOrEquals
+              | Equals
+              | GreaterThanOrEquals
+              | GreaterThan
+              | NotEquals
               | BranchIfFalse PCOffset
               | Goto PCOffset
   deriving stock (Show, Eq, Generic)
