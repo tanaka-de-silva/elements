@@ -46,6 +46,13 @@ operatorTable :: [[Operator Parser Expression]]
 operatorTable =
   [ [prefix "-" Negate, prefix "+" id]
   , [binary "+" AST.add, binary "-" AST.subtract]
+  , [ binary "==" AST.equals
+    , binary "!=" AST.notEquals
+    , binary "<=" AST.lessThanOrEquals
+    , binary "<"  AST.lessThan
+    , binary ">=" AST.greaterThanOrEquals
+    , binary ">"  AST.greaterThan
+    ]
   ]
 
 pTerm :: Parser Expression

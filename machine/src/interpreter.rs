@@ -25,6 +25,42 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
         let result = -value;
         stack.push(result)
       }
+      Some(Bytecode::Equals) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs == rhs;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::NotEquals) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs != rhs;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::LessThan) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs < rhs;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::LessThanOrEquals) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs <= rhs;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::GreaterThan) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs > rhs;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::GreaterThanOrEquals) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs >= rhs;
+        stack.push(result as i32);
+      }
       Some(Bytecode::Goto(i)) => {
         program_counter += i;
       }
@@ -69,6 +105,126 @@ mod tests {
     let bytecodes = vec![Bytecode::PushInt(1), Bytecode::Negate];
     let result = evalute(&bytecodes);
     assert_eq!(result, -1);
+  }
+
+  #[test]
+  fn can_check_equality() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(0),
+        Bytecode::PushInt(1),
+        Bytecode::Equals
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(1),
+        Bytecode::PushInt(1),
+        Bytecode::Equals
+      ]),
+      1
+    );
+  }
+
+  #[test]
+  fn can_check_inequality() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(3),
+        Bytecode::PushInt(3),
+        Bytecode::NotEquals,
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(3),
+        Bytecode::PushInt(2),
+        Bytecode::NotEquals,
+      ]),
+      1
+    );
+  }
+
+  #[test]
+  fn can_check_if_a_value_is_less_than_another() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(2),
+        Bytecode::PushInt(1),
+        Bytecode::LessThan,
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(1),
+        Bytecode::PushInt(2),
+        Bytecode::LessThan,
+      ]),
+      1
+    );
+  }
+
+  #[test]
+  fn can_check_if_a_value_is_less_than_or_equal_to_another() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(2),
+        Bytecode::PushInt(1),
+        Bytecode::LessThanOrEquals,
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(1),
+        Bytecode::PushInt(2),
+        Bytecode::LessThanOrEquals,
+      ]),
+      1
+    );
+  }
+
+  #[test]
+  fn can_check_if_a_value_is_greater_than_another() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(2),
+        Bytecode::PushInt(3),
+        Bytecode::GreaterThan,
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(3),
+        Bytecode::PushInt(2),
+        Bytecode::GreaterThan,
+      ]),
+      1
+    );
+  }
+
+  #[test]
+  fn can_check_if_a_value_is_greater_or_than_equal_to_another() {
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(2),
+        Bytecode::PushInt(3),
+        Bytecode::GreaterThanOrEquals,
+      ]),
+      0
+    );
+    assert_eq!(
+      evalute(&vec![
+        Bytecode::PushInt(3),
+        Bytecode::PushInt(2),
+        Bytecode::GreaterThanOrEquals,
+      ]),
+      1
+    );
   }
 
   #[test]

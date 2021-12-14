@@ -28,6 +28,15 @@ parseBinaryArithmetic = do
   parseExpr "1 + 2" `shouldBe` Right (AST.add (int 1) (int 2))
   parseExpr "3 - 1" `shouldBe` Right (AST.subtract (int 3) (int 1))
 
+parseComparisons :: IO ()
+parseComparisons = do
+  parseExpr "1 <  2" `shouldBe` Right (AST.lessThan (int 1) (int 2))
+  parseExpr "1 <= 2" `shouldBe` Right (AST.lessThanOrEquals (int 1) (int 2))
+  parseExpr "1 == 1" `shouldBe` Right (AST.equals (int 1) (int 1))
+  parseExpr "3 >= 2" `shouldBe` Right (AST.greaterThanOrEquals (int 3) (int 2))
+  parseExpr "3  > 2" `shouldBe` Right (AST.greaterThan (int 3) (int 2))
+  parseExpr "3 != 2" `shouldBe` Right (AST.notEquals (int 3) (int 2))
+
 parseNegation :: IO ()
 parseNegation = parseExpr "-1" `shouldBe` Right (AST.Negate (int 1))
 
@@ -49,6 +58,7 @@ spec = do
   it "can parse integers"                       parseIntegers
   it "can parse booleans"                       parseBooleans
   it "can parses binary arithmetic expressions" parseBinaryArithmetic
+  it "can parses comparison expressions"        parseComparisons
   it "can parse a negation expression"          parseNegation
   it "can parse a poitive prefix expression"    parsePostivePrefix
   it "can parse an if else expression"          parseIfElse
