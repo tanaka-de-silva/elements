@@ -1,6 +1,10 @@
 module Elements.AST where
 
 import           Data.Aeson                     ( ToJSON )
+import           Data.Hashable                  ( Hashable )
+import           Data.String                    ( IsString(..) )
+import           Data.Text                      ( Text )
+import qualified Data.Text                     as Text
 import           GHC.Generics                   ( Generic )
 import           GHC.Int                        ( Int32 )
 
@@ -46,12 +50,29 @@ data IfElse' = IfElse'
   deriving stock (Show, Eq, Generic)
   deriving anyclass ToJSON
 
+newtype Identifier = Identifier { unwrapIndentifier :: Text }
+  deriving newtype (Eq, Hashable, Show, ToJSON)
+
+instance IsString Identifier where
+  fromString = Identifier . Text.pack
+
+data ValBinding' = ValBinding'
+  { identifier :: Identifier
+  , lineNum    :: Int
+  , boundExpr  :: Expression
+  , baseExpr   :: Expression
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass ToJSON
+
 data Expression = NumericLiteral NumericValue
                 | BoolLiteral Bool
+                | Value Identifier
                 | Negate Expression
                 | BinaryOp BinaryOp'
                 | Comparison Comparison'
                 | IfElse IfElse'
+                | ValBinding ValBinding'
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 

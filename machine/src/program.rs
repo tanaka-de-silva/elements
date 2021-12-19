@@ -12,6 +12,8 @@ pub enum Bytecode {
   GreaterThanOrEquals,
   GreaterThan,
   NotEquals,
+  StoreLocal(i32),
+  GetLocal(i32),
   BranchIfFalse(i32),
   Goto(i32),
   PushInt(i32),

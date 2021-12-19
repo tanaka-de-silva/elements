@@ -3,6 +3,7 @@ module Elements.Compiler
   , compileExpression
   ) where
 
+import qualified Control.Monad.Except          as Except
 import qualified Data.Aeson.Encode.Pretty      as AesonPretty
 import qualified Data.ByteString.Internal      as BS
 import qualified Data.ByteString.Lazy          as LBS
@@ -17,7 +18,13 @@ import           Elements.Bytecode              ( Bytecode
 import qualified Elements.Bytecode             as Bytecode
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )
-import           Elements.Compiler.Types        ( Program(..) )
+import           Elements.Compiler.Types        ( CompileError(..)
+                                                , CompilerM
+                                                , Program(..)
+                                                )
+import qualified Elements.Compiler.Types       as CompilerT
+import           Elements.Compiler.Vars         ( Vars )
+import qualified Elements.Compiler.Vars        as Vars
 import           Elements.Parser                ( TextParseError
                                                 , pExpression
                                                 )
@@ -44,8 +51,8 @@ combineBinOpFragments
 combineBinOpFragments opBytecode lhsFragment rhsFragment =
   Fragment.append opBytecode $ lhsFragment <> rhsFragment
 
-bytecode :: Bytecode -> Fragment Bytecode
-bytecode = Fragment.singleton
+bytecode :: Bytecode -> CompilerM (Fragment Bytecode)
+bytecode = return . Fragment.singleton
 
 fragmentPCOffset :: Fragment a -> PCOffset
 fragmentPCOffset = PCOffset . fromIntegral . Fragment.length
@@ -63,27 +70,71 @@ combineIfElseFragments testFragment thenFragment elseFragment =
         <> Fragment.append gotoElseEnd thenFragment
         <> elseFragment
 
-compileExpression :: AST.Expression -> Fragment Bytecode
-compileExpression = \case
+compileExpression :: Vars -> AST.Expression -> CompilerM (Fragment Bytecode)
+compileExpression vars = \case
   AST.NumericLiteral value -> bytecode $ pushNumericValue value
+
   AST.BoolLiteral value -> bytecode $ Bytecode.PushInt $ if value then 1 else 0
-  AST.Negate expr -> Fragment.append Bytecode.Negate $ compileExpression expr
-  AST.BinaryOp (AST.BinaryOp' op lhs rhs) -> combineBinOpFragments
-    (arithmeticOpBytecode op)
-    (compileExpression lhs)
-    (compileExpression rhs)
-  AST.Comparison (AST.Comparison' op lhs rhs) -> combineBinOpFragments
-    (comparisonOpBytecode op)
-    (compileExpression lhs)
-    (compileExpression rhs)
+
+  AST.Value x -> case Vars.lookupVar x vars of
+    Just vInfo -> bytecode $ Bytecode.GetLocal $ Vars.localVarIndex vInfo
+    Nothing    -> Except.throwError $ UndefinedValueError x
+
+  AST.Negate expr ->
+    Fragment.append Bytecode.Negate <$> compileExpression vars expr
+
+  AST.BinaryOp (AST.BinaryOp' op lhs rhs) ->
+    combineBinOpFragments (arithmeticOpBytecode op)
+      <$> compileExpression vars lhs
+      <*> compileExpression vars rhs
+
+  AST.Comparison (AST.Comparison' op lhs rhs) ->
+    combineBinOpFragments (comparisonOpBytecode op)
+      <$> compileExpression vars lhs
+      <*> compileExpression vars rhs
+
   AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) ->
-    combineIfElseFragments (compileExpression testCondition)
-                           (compileExpression thenExpr)
-                           (compileExpression elseExpr)
+    combineIfElseFragments
+      <$> compileExpression vars testCondition
+      <*> compileExpression vars thenExpr
+      <*> compileExpression vars elseExpr
+
+  AST.ValBinding (AST.ValBinding' identifier lNum boundExpr baseExpr) ->
+    case Vars.lookupVar identifier vars of
+      Just varInfo ->
+        Except.throwError
+          $ DuplicateValueDefinitionError
+          $ CompilerT.DuplicateValueDefinitionError' identifier
+                                                     (Vars.lineNum varInfo)
+                                                     lNum
+      Nothing ->
+        let (n, newVars) = Vars.addVar identifier lNum vars
+            storeLocal   = Bytecode.StoreLocal n
+        in  (\boundFragment baseFragment ->
+              Fragment.append storeLocal boundFragment <> baseFragment
+            )
+              <$> compileExpression vars    boundExpr
+              <*> compileExpression newVars baseExpr
 
 parseFromFile :: FilePath -> IO (Either TextParseError AST.Expression)
 parseFromFile filePath =
   Megaparsec.runParser pExpression filePath <$> TextIO.readFile filePath
+
+printCompilerError :: CompileError -> String
+printCompilerError = \case
+  DuplicateValueDefinitionError (CompilerT.DuplicateValueDefinitionError' i o d)
+    -> let quotedIdentifier = show $ AST.unwrapIndentifier i
+       in
+         "the value definition "
+         <> quotedIdentifier
+         <> " in line "
+         <> show d
+         <> " attempts to define a value that has already been defined in line "
+         <> show o
+
+  UndefinedValueError i ->
+    let quotedIdentifier = show $ AST.unwrapIndentifier i
+    in  "the value " <> quotedIdentifier <> " has not been defined"
 
 compile :: FilePath -> IO ()
 compile sourcePath = do
@@ -91,7 +142,15 @@ compile sourcePath = do
     Left  e -> error $ "could not parse file " <> sourcePath <> show e
     Right x -> return x
   let
-    program = (Program . Fragment.toList . compileExpression) expression
+    program =
+      case CompilerT.runCompilerM (compileExpression Vars.empty expression) of
+        Left e ->
+          error
+            $  "could not compile file "
+            <> sourcePath
+            <> ", "
+            <> printCompilerError e
+        Right fragment -> (Program . Fragment.toList) fragment
     newline = BS.c2w '\n'
     output  = AesonPretty.encodePretty program `LBS.snoc` newline
     bytecodePath =

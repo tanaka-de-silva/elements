@@ -53,6 +53,33 @@ parseIfElse =
         }
   in  result `shouldBe` Right expected
 
+parseSingleValBinding :: IO ()
+parseSingleValBinding =
+  let result   = parseExpr $ Text.unlines ["val x = 1", "x + 1"]
+      expected = AST.ValBinding $ AST.ValBinding'
+        { AST.identifier = "x"
+        , AST.lineNum    = 1
+        , AST.boundExpr  = int 1
+        , AST.baseExpr   = AST.add (AST.Value "x") (int 1)
+        }
+  in  result `shouldBe` Right expected
+
+parseMultipleValBindings :: IO ()
+parseMultipleValBindings =
+  let result = parseExpr $ Text.unlines ["val x = 1", "val y = 2", "x + y"]
+      innerBinding = AST.ValBinding $ AST.ValBinding'
+        { AST.identifier = "y"
+        , AST.lineNum    = 2
+        , AST.boundExpr  = int 2
+        , AST.baseExpr   = AST.add (AST.Value "x") (AST.Value "y")
+        }
+      expected = AST.ValBinding $ AST.ValBinding' { AST.identifier = "x"
+                                                  , AST.lineNum    = 1
+                                                  , AST.boundExpr  = int 1
+                                                  , AST.baseExpr = innerBinding
+                                                  }
+  in  result `shouldBe` Right expected
+
 spec :: Spec
 spec = do
   it "can parse integers"                       parseIntegers
@@ -62,3 +89,5 @@ spec = do
   it "can parse a negation expression"          parseNegation
   it "can parse a poitive prefix expression"    parsePostivePrefix
   it "can parse an if else expression"          parseIfElse
+  it "can parse a single val binding"           parseSingleValBinding
+  it "can parse multiple val bindings"          parseMultipleValBindings

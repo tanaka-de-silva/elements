@@ -1,9 +1,11 @@
 use super::program::Bytecode;
 use super::stack::Stack;
 use super::values::VmValue;
+use std::collections::HashMap;
 
 pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
   let mut stack: Stack = Stack::new();
+  let mut locals: HashMap<i32, VmValue> = HashMap::new();
   let mut program_counter = 0;
   loop {
     match bytecodes.get(program_counter as usize) {
@@ -63,6 +65,14 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
       }
       Some(Bytecode::Goto(i)) => {
         program_counter += i;
+      }
+      Some(Bytecode::GetLocal(i)) => {
+        let value = locals.get(i).unwrap();
+        stack.push(*value)
+      }
+      Some(Bytecode::StoreLocal(i)) => {
+        let value = stack.pop().unwrap();
+        locals.insert(*i, value);
       }
       Some(Bytecode::BranchIfFalse(i)) => match stack.pop() {
         Some(x) => {
@@ -268,4 +278,22 @@ mod tests {
     let result = evalute(&bytecodes);
     assert_eq!(result, 7);
   }
+
+  #[test]
+  fn can_store_and_get_local_values() {
+    let bytecodes = vec![
+      Bytecode::PushInt(1),
+      Bytecode::StoreLocal(0),
+      Bytecode::PushInt(3),
+      Bytecode::StoreLocal(1),
+      Bytecode::GetLocal(0),
+      Bytecode::GetLocal(0),
+      Bytecode::GetLocal(1),
+      Bytecode::Add,
+      Bytecode::Add,
+    ];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 5);
+  }
+
 }

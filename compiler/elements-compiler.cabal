@@ -14,6 +14,7 @@ library
   exposed-modules:
       Elements.Compiler
     , Elements.Compiler.Fragment
+    , Elements.Compiler.Vars
     , Elements.AST
     , Elements.Bytecode
     , Elements.Compiler.Types
@@ -27,9 +28,12 @@ library
     , bytestring
     , dlist
     , filepath
+    , hashable
     , megaparsec
+    , mtl
     , parser-combinators
     , text
+    , unordered-containers
   default-language: Haskell2010
   default-extensions: 
       DerivingStrategies

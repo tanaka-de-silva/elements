@@ -1,6 +1,7 @@
 module Elements.Bytecode where
 
 import           Data.Aeson                     ( ToJSON )
+import           Elements.Compiler.Vars         ( LocalVarIndex )
 import           GHC.Generics                   ( Generic )
 import           GHC.Int                        ( Int32 )
 
@@ -19,5 +20,7 @@ data Bytecode = PushInt Int32
               | NotEquals
               | BranchIfFalse PCOffset
               | Goto PCOffset
+              | StoreLocal LocalVarIndex
+              | GetLocal LocalVarIndex
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
