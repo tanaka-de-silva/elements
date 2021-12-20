@@ -7,15 +7,16 @@ module Elements.Parser
 import           Control.Monad.Combinators.Expr ( Operator(..)
                                                 , makeExprParser
                                                 )
+import qualified Data.HashSet                  as HashSet
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           Data.Void                      ( Void )
+import           Elements.AST                   ( Expression(..) )
+import qualified Elements.AST                  as AST
 import           Text.Megaparsec         hiding ( State )
 import qualified Text.Megaparsec.Char          as MC
 import qualified Text.Megaparsec.Char.Lexer    as MCL
-
-import           Elements.AST                   ( Expression(..) )
-import qualified Elements.AST                  as AST
+import qualified Text.Megaparsec.Pos           as MP
 
 type Parser = Parsec Void Text
 
@@ -42,6 +43,27 @@ pBool = lexeme $ trueParser <|> falseParser
 pKeyword :: Text -> Parser Text
 pKeyword keyword = lexeme (MC.string keyword <* notFollowedBy MC.alphaNumChar)
 
+reservedKeywords :: HashSet.HashSet Text
+reservedKeywords =
+  HashSet.fromList $ boolKeywords ++ condKeywords ++ defKeywords
+ where
+  boolKeywords = ["true", "false"]
+  condKeywords = ["if", "then", "else"]
+  defKeywords  = ["val"]
+
+pIdentifier :: Parser AST.Identifier
+pIdentifier = AST.Identifier <$> (lexeme . try) (pCandidate >>= check)
+ where
+  pCandidate =
+    Text.pack
+      <$> ((:) <$> MC.letterChar <*> many MC.alphaNumChar <?> "identifier")
+  check x = if HashSet.member x reservedKeywords
+    then fail $ "keyword " <> show x <> " cannot be an identifier"
+    else return x
+
+pValue :: Parser Expression
+pValue = Value <$> pIdentifier
+
 operatorTable :: [[Operator Parser Expression]]
 operatorTable =
   [ [prefix "-" Negate, prefix "+" id]
@@ -56,10 +78,10 @@ operatorTable =
   ]
 
 pTerm :: Parser Expression
-pTerm = choice [pInteger, pBool]
+pTerm = choice [pInteger, pBool, pValue]
 
 pExpression :: Parser Expression
-pExpression = makeExprParser pTerm operatorTable <|> pIfElse
+pExpression = makeExprParser pTerm operatorTable <|> pIfElse <|> pVal
 
 pIfElse :: Parser Expression
 pIfElse = do
@@ -79,3 +101,13 @@ binary name f = InfixL (f <$ symbol name)
 
 prefix :: Text -> (Expression -> Expression) -> Operator Parser Expression
 prefix name f = Prefix (f <$ symbol name)
+
+pVal :: Parser Expression
+pVal = do
+  pKeyword "val"
+  lineNum    <- (MP.unPos . MP.sourceLine) <$> getSourcePos
+  identifier <- pIdentifier
+  symbol "="
+  boundValue <- pExpression
+  body       <- pExpression
+  return $ ValBinding $ AST.ValBinding' identifier lineNum boundValue body
