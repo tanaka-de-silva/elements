@@ -39,6 +39,11 @@ arithmeticOpBytecode = \case
   AST.Multiply -> Bytecode.Multiply
   AST.Divide   -> Bytecode.Divide
 
+logicalOpBytecode :: AST.LogicalOp -> Bytecode
+logicalOpBytecode = \case
+  AST.And -> Bytecode.And
+  AST.Or  -> Bytecode.Or
+
 comparisonOpBytecode :: AST.ComparisonOp -> Bytecode
 comparisonOpBytecode = \case
   AST.LessThan            -> Bytecode.LessThan
@@ -85,8 +90,13 @@ compileExpression vars = \case
   AST.Negate expr ->
     Fragment.append Bytecode.Negate <$> compileExpression vars expr
 
-  AST.BinaryOp (AST.BinaryOp' op lhs rhs) ->
+  AST.BinaryArithOp (AST.BinaryArithOp' op lhs rhs) ->
     combineBinOpFragments (arithmeticOpBytecode op)
+      <$> compileExpression vars lhs
+      <*> compileExpression vars rhs
+
+  AST.BinaryLogicalOp (AST.BinaryLogicalOp' op lhs rhs) ->
+    combineBinOpFragments (logicalOpBytecode op)
       <$> compileExpression vars lhs
       <*> compileExpression vars rhs
 

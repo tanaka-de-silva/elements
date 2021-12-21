@@ -19,10 +19,23 @@ data ArithmeticOp = Add
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
-data BinaryOp' = BinaryOp'
-  { binOp    :: ArithmeticOp
-  , binOpLhs :: Expression
-  , binOpRhs :: Expression
+data BinaryArithOp' = BinaryArithOp'
+  { binArithOp   :: ArithmeticOp
+  , binAritOpLhs :: Expression
+  , binAritOpRhs :: Expression
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass ToJSON
+
+data LogicalOp = And
+               | Or
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSON)
+
+data BinaryLogicalOp' = BinaryLogicalOp'
+  { binLogicalOp    :: LogicalOp
+  , binLogicalOpLhs :: Expression
+  , binLogicakOpRhs :: Expression
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass ToJSON
@@ -71,7 +84,8 @@ data Expression = NumericLiteral NumericValue
                 | BoolLiteral Bool
                 | Value Identifier
                 | Negate Expression
-                | BinaryOp BinaryOp'
+                | BinaryArithOp BinaryArithOp'
+                | BinaryLogicalOp BinaryLogicalOp'
                 | Comparison Comparison'
                 | IfElse IfElse'
                 | ValBinding ValBinding'
@@ -81,16 +95,24 @@ data Expression = NumericLiteral NumericValue
 -- Binary arithmetic operators
 
 add :: Expression -> Expression -> Expression
-add lhs rhs = BinaryOp $ BinaryOp' Add lhs rhs
+add lhs rhs = BinaryArithOp $ BinaryArithOp' Add lhs rhs
 
 subtract :: Expression -> Expression -> Expression
-subtract lhs rhs = BinaryOp $ BinaryOp' Subtract lhs rhs
+subtract lhs rhs = BinaryArithOp $ BinaryArithOp' Subtract lhs rhs
 
 multiply :: Expression -> Expression -> Expression
-multiply lhs rhs = BinaryOp $ BinaryOp' Multiply lhs rhs
+multiply lhs rhs = BinaryArithOp $ BinaryArithOp' Multiply lhs rhs
 
 divide :: Expression -> Expression -> Expression
-divide lhs rhs = BinaryOp $ BinaryOp' Divide lhs rhs
+divide lhs rhs = BinaryArithOp $ BinaryArithOp' Divide lhs rhs
+
+-- Binary logical operators
+
+and :: Expression -> Expression -> Expression
+and lhs rhs = BinaryLogicalOp $ BinaryLogicalOp' And lhs rhs
+
+or :: Expression -> Expression -> Expression
+or lhs rhs = BinaryLogicalOp $ BinaryLogicalOp' Or lhs rhs
 
 -- Comparison operators
 

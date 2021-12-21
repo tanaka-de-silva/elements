@@ -30,6 +30,13 @@ parseBinaryArithmetic = do
   parseExpr "2 * 3" `shouldBe` Right (AST.multiply (int 2) (int 3))
   parseExpr "4 / 2" `shouldBe` Right (AST.divide (int 4) (int 2))
 
+parseBinaryLogical :: IO ()
+parseBinaryLogical = do
+  parseExpr "true || false"
+    `shouldBe` Right (AST.or (AST.BoolLiteral True) (AST.BoolLiteral False))
+  parseExpr "true && true"
+    `shouldBe` Right (AST.and (AST.BoolLiteral True) (AST.BoolLiteral True))
+
 parseComparisons :: IO ()
 parseComparisons = do
   parseExpr "1 <  2" `shouldBe` Right (AST.lessThan (int 1) (int 2))
@@ -87,6 +94,7 @@ spec = do
   it "can parse integers"                       parseIntegers
   it "can parse booleans"                       parseBooleans
   it "can parses binary arithmetic expressions" parseBinaryArithmetic
+  it "can parses binary logical expressions"    parseBinaryLogical
   it "can parses comparison expressions"        parseComparisons
   it "can parse a negation expression"          parseNegation
   it "can parse a poitive prefix expression"    parsePostivePrefix

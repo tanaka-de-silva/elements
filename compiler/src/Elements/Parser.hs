@@ -76,6 +76,7 @@ operatorTable =
     , binary ">=" AST.greaterThanOrEquals
     , binary ">"  AST.greaterThan
     ]
+  , [binary "&&" AST.and, binary "||" AST.or]
   ]
 
 pTerm :: Parser Expression
