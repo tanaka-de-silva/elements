@@ -36,6 +36,8 @@ arithmeticOpBytecode :: AST.ArithmeticOp -> Bytecode
 arithmeticOpBytecode = \case
   AST.Add      -> Bytecode.Add
   AST.Subtract -> Bytecode.Subtract
+  AST.Multiply -> Bytecode.Multiply
+  AST.Divide   -> Bytecode.Divide
 
 comparisonOpBytecode :: AST.ComparisonOp -> Bytecode
 comparisonOpBytecode = \case

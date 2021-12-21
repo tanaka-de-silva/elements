@@ -67,6 +67,7 @@ pValue = Value <$> pIdentifier
 operatorTable :: [[Operator Parser Expression]]
 operatorTable =
   [ [prefix "-" Negate, prefix "+" id]
+  , [binary "*" AST.multiply, binary "/" AST.divide]
   , [binary "+" AST.add, binary "-" AST.subtract]
   , [ binary "==" AST.equals
     , binary "!=" AST.notEquals

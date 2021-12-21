@@ -27,6 +27,8 @@ parseBinaryArithmetic :: IO ()
 parseBinaryArithmetic = do
   parseExpr "1 + 2" `shouldBe` Right (AST.add (int 1) (int 2))
   parseExpr "3 - 1" `shouldBe` Right (AST.subtract (int 3) (int 1))
+  parseExpr "2 * 3" `shouldBe` Right (AST.multiply (int 2) (int 3))
+  parseExpr "4 / 2" `shouldBe` Right (AST.divide (int 4) (int 2))
 
 parseComparisons :: IO ()
 parseComparisons = do

@@ -10,6 +10,52 @@
         },
         {
             "tag": "Add"
+        },
+        {
+            "tag": "StoreLocal",
+            "contents": 0
+        },
+        {
+            "tag": "GetLocal",
+            "contents": 0
+        },
+        {
+            "tag": "PushInt",
+            "contents": 2
+        },
+        {
+            "tag": "GreaterThan"
+        },
+        {
+            "tag": "BranchIfFalse",
+            "contents": 2
+        },
+        {
+            "tag": "PushInt",
+            "contents": 5
+        },
+        {
+            "tag": "Goto",
+            "contents": 1
+        },
+        {
+            "tag": "PushInt",
+            "contents": 1
+        },
+        {
+            "tag": "StoreLocal",
+            "contents": 1
+        },
+        {
+            "tag": "GetLocal",
+            "contents": 0
+        },
+        {
+            "tag": "GetLocal",
+            "contents": 1
+        },
+        {
+            "tag": "Multiply"
         }
     ]
 }
