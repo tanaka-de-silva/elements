@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub enum Bytecode {
   Add,
   Subtract,
+  Multiply,
+  Divide,
   Negate,
   LessThan,
   LessThanOrEquals,

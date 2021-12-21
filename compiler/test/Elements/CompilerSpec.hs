@@ -48,6 +48,20 @@ subtraction =
       expected = [Bytecode.PushInt 3, Bytecode.PushInt 1, Bytecode.Subtract]
   in  result `shouldBe` Right expected
 
+multiplication :: IO ()
+multiplication =
+  let program  = AST.multiply (int 2) (int 3)
+      result   = testExpression program
+      expected = [Bytecode.PushInt 2, Bytecode.PushInt 3, Bytecode.Multiply]
+  in  result `shouldBe` Right expected
+
+division :: IO ()
+division =
+  let program  = AST.divide (int 4) (int 2)
+      result   = testExpression program
+      expected = [Bytecode.PushInt 4, Bytecode.PushInt 2, Bytecode.Divide]
+  in  result `shouldBe` Right expected
+
 negation :: IO ()
 negation =
   let program  = AST.Negate (int 1)
@@ -197,6 +211,8 @@ spec = do
   it "can push a boolean value on to the stack"  pushBooleanValue
   it "can add two numbers together"              addition
   it "can subtract one number from another"      subtraction
+  it "can multiply a number by another"          multiplication
+  it "can divide a number by another"            division
   it "can negate a number"                       negation
   it "can check equality"                        checkEquality
   it "can check if a value is less than another" checkLessThan

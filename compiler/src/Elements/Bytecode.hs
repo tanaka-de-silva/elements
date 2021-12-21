@@ -11,6 +11,8 @@ newtype PCOffset = PCOffset Int32
 data Bytecode = PushInt Int32
               | Add
               | Subtract
+              | Multiply
+              | Divide
               | Negate
               | LessThan
               | LessThanOrEquals

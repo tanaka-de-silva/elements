@@ -22,6 +22,18 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
         let result = lhs - rhs;
         stack.push(result)
       }
+      Some(Bytecode::Multiply) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs * rhs;
+        stack.push(result)
+      }
+      Some(Bytecode::Divide) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs / rhs;
+        stack.push(result)
+      }
       Some(Bytecode::Negate) => {
         let value = stack.pop().unwrap();
         let result = -value;
@@ -108,6 +120,24 @@ mod tests {
     ];
     let result = evalute(&bytecodes);
     assert_eq!(result, 1);
+  }
+
+  #[test]
+  fn can_multiply_a_number_by_another() {
+    let bytecodes = vec![
+      Bytecode::PushInt(2),
+      Bytecode::PushInt(3),
+      Bytecode::Multiply,
+    ];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 6);
+  }
+
+  #[test]
+  fn can_divide_a_number_by_another() {
+    let bytecodes = vec![Bytecode::PushInt(4), Bytecode::PushInt(2), Bytecode::Divide];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 2);
   }
 
   #[test]
@@ -295,5 +325,4 @@ mod tests {
     let result = evalute(&bytecodes);
     assert_eq!(result, 5);
   }
-
 }

@@ -14,6 +14,8 @@ newtype NumericValue = IntValue Int32
 
 data ArithmeticOp = Add
                   | Subtract
+                  | Multiply
+                  | Divide
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
@@ -76,11 +78,21 @@ data Expression = NumericLiteral NumericValue
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
+-- Binary arithmetic operators
+
 add :: Expression -> Expression -> Expression
 add lhs rhs = BinaryOp $ BinaryOp' Add lhs rhs
 
 subtract :: Expression -> Expression -> Expression
 subtract lhs rhs = BinaryOp $ BinaryOp' Subtract lhs rhs
+
+multiply :: Expression -> Expression -> Expression
+multiply lhs rhs = BinaryOp $ BinaryOp' Multiply lhs rhs
+
+divide :: Expression -> Expression -> Expression
+divide lhs rhs = BinaryOp $ BinaryOp' Divide lhs rhs
+
+-- Comparison operators
 
 lessThan :: Expression -> Expression -> Expression
 lessThan lhs rhs = Comparison $ Comparison' LessThan lhs rhs
