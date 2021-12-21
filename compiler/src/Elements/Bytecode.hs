@@ -20,6 +20,8 @@ data Bytecode = PushInt Int32
               | GreaterThanOrEquals
               | GreaterThan
               | NotEquals
+              | And
+              | Or
               | BranchIfFalse PCOffset
               | Goto PCOffset
               | StoreLocal LocalVarIndex

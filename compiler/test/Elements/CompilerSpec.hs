@@ -117,6 +117,20 @@ checkInequality =
       expected = [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.NotEquals]
   in  result `shouldBe` Right expected
 
+conjuction :: IO ()
+conjuction =
+  let program  = AST.and (AST.BoolLiteral True) (AST.BoolLiteral True)
+      result   = testExpression program
+      expected = [Bytecode.PushInt 1, Bytecode.PushInt 1, Bytecode.And]
+  in  result `shouldBe` Right expected
+
+disjunction :: IO ()
+disjunction =
+  let program  = AST.or (AST.BoolLiteral True) (AST.BoolLiteral False)
+      result   = testExpression program
+      expected = [Bytecode.PushInt 1, Bytecode.PushInt 0, Bytecode.Or]
+  in  result `shouldBe` Right expected
+
 simpleIfElse :: IO ()
 simpleIfElse =
   let program = AST.IfElse $ AST.IfElse'
@@ -222,6 +236,8 @@ spec = do
   it "can check if a value is greater or than equal to another"
      checkGreaterOrEqual
   it "can check inequality"                       checkInequality
+  it "can find the conjuction of two booleans"    conjuction
+  it "can find the disjunction of two booleans"   disjunction
   it "can handle simple if else expressions"      simpleIfElse
   it "can handle a simple val binding"            simpleValBinding
   it "returns an error when an undefined value is referenced" undefinedValueRef

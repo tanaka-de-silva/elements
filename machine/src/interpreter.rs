@@ -75,6 +75,18 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> VmValue {
         let result = lhs >= rhs;
         stack.push(result as i32);
       }
+      Some(Bytecode::And) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs != 0 && rhs != 0;
+        stack.push(result as i32);
+      }
+      Some(Bytecode::Or) => {
+        let rhs = stack.pop().unwrap();
+        let lhs = stack.pop().unwrap();
+        let result = lhs != 0 || rhs != 0;
+        stack.push(result as i32);
+      }
       Some(Bytecode::Goto(i)) => {
         program_counter += i;
       }
@@ -138,6 +150,20 @@ mod tests {
     let bytecodes = vec![Bytecode::PushInt(4), Bytecode::PushInt(2), Bytecode::Divide];
     let result = evalute(&bytecodes);
     assert_eq!(result, 2);
+  }
+
+  #[test]
+  fn can_find_the_conjunction_of_two_booleans() {
+    let bytecodes = vec![Bytecode::PushInt(1), Bytecode::PushInt(1), Bytecode::And];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 1);
+  }
+
+  #[test]
+  fn can_find_the_disjunction_of_two_booleans() {
+    let bytecodes = vec![Bytecode::PushInt(1), Bytecode::PushInt(0), Bytecode::Or];
+    let result = evalute(&bytecodes);
+    assert_eq!(result, 1);
   }
 
   #[test]
