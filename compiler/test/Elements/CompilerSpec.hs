@@ -11,16 +11,13 @@ import           Elements.Bytecode              ( Bytecode )
 import           Elements.Compiler              ( compileExpression )
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )
-import           Elements.Compiler.Types        ( CompileError
-                                                , runCompilerM
-                                                )
+import           Elements.Compiler.Types        ( CompileError )
 import qualified Elements.Compiler.Types       as CompilerT
 import qualified Elements.Compiler.Vars        as Vars
 import           Elements.Syntax                ( int )
 
 testExpression :: AST.Expression -> Either CompileError [Bytecode]
-testExpression =
-  fmap Fragment.toList . runCompilerM . compileExpression Vars.empty
+testExpression = fmap Fragment.toList . compileExpression
 
 pushIntegerValue :: IO ()
 pushIntegerValue =
