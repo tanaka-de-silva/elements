@@ -90,12 +90,12 @@ assertExpressionType varTypes expected expr = do
 
 checkExpression :: VarTypes -> AST.Expression -> Either CompileError DataType
 checkExpression varTypes = \case
-  AST.NumericLiteral _ -> Right IntType
+  AST.NumericLiteral _                   -> Right IntType
 
-  AST.BoolLiteral    _ -> Right BoolType
+  AST.BoolLiteral    _                   -> Right BoolType
 
-  AST.Value          i -> case HashMap.lookup i varTypes of
-    Nothing  -> Left $ UndefinedValueError i
+  AST.Value          (AST.Value' i lNum) -> case HashMap.lookup i varTypes of
+    Nothing  -> Left $ UndefinedValueError i lNum
     Just vti -> Right $ CompilerT.vtDataType vti
 
   AST.Negate expr -> assertExpressionType varTypes IntType expr
@@ -122,7 +122,6 @@ checkExpression varTypes = \case
         (\_ _ -> BoolType)
         <$> assertExpressionType varTypes IntType lhs
         <*> assertExpressionType varTypes IntType rhs
-
 
   AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) -> do
     assertExpressionType varTypes BoolType testCondition
@@ -154,10 +153,11 @@ codegen vars = \case
 
   AST.BoolLiteral value -> bytecode $ Bytecode.PushInt $ if value then 1 else 0
 
-  AST.Value x -> case Vars.lookupVar x vars of
+  AST.Value (AST.Value' i lNum) -> case Vars.lookupVar i vars of
     Just vInfo -> bytecode $ Bytecode.GetLocal $ Vars.localVarIndex vInfo
     Nothing ->
-      error $ "internal error, unexpected undefined value error " <> show x
+      error $ "internal error, unexpected undefined value error " <> show
+        (AST.unwrapIndentifier i)
 
   AST.Negate expr -> Fragment.append Bytecode.Negate $ codegen vars expr
 
@@ -200,9 +200,9 @@ printCompilerError :: CompileError -> String
 printCompilerError = \case
   TypeError (CompilerT.TypeError' expected actual) ->
     "type error, expected value of type "
-      <> show expected
+      <> CompilerT.showDataType expected
       <> " but the actual type is "
-      <> show actual
+      <> CompilerT.showDataType actual
 
   DuplicateValueDefinitionError (CompilerT.DuplicateValueDefinitionError' i o d)
     -> let quotedIdentifier = show $ AST.unwrapIndentifier i
@@ -214,9 +214,13 @@ printCompilerError = \case
          <> " attempts to define a value that has already been defined in line "
          <> show o
 
-  UndefinedValueError i ->
+  UndefinedValueError i lNum ->
     let quotedIdentifier = show $ AST.unwrapIndentifier i
-    in  "the value " <> quotedIdentifier <> " has not been defined"
+    in  "the value "
+          <> quotedIdentifier
+          <> " in line "
+          <> show lNum
+          <> " has not been defined"
 
 compileExpression :: AST.Expression -> Either CompileError (Fragment Bytecode)
 compileExpression expression = case checkExpression HashMap.empty expression of

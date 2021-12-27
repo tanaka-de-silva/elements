@@ -17,10 +17,15 @@ data DataType = BoolType
               | IntType
   deriving (Show, Eq)
 
+showDataType :: DataType -> String
+showDataType = \case
+  BoolType -> "Bool"
+  IntType -> "Int"
+
 data DuplicateValueDefinitionError' = DuplicateValueDefinitionError'
   { duplicateVal :: AST.Identifier
-  , originalLine :: Int
-  , duplicateLine :: Int
+  , originalLine :: AST.LineNumber
+  , duplicateLine :: AST.LineNumber
   } deriving (Show, Eq)
 
 data TypeError' = TypeError'
@@ -30,13 +35,13 @@ data TypeError' = TypeError'
   deriving (Show, Eq)
 
 data CompileError = DuplicateValueDefinitionError DuplicateValueDefinitionError'
-                  | UndefinedValueError AST.Identifier
+                  | UndefinedValueError AST.Identifier AST.LineNumber
                   | TypeError TypeError'
                     deriving (Show, Eq)
 
 data VarTypeInfo = VarTypeInfo
   { vtDataType    :: DataType
-  , vtLineNum     :: Int
+  , vtLineNum     :: AST.LineNumber
   }
 
 type VarTypes = HashMap AST.Identifier VarTypeInfo

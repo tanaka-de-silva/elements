@@ -61,8 +61,14 @@ pIdentifier = AST.Identifier <$> (lexeme . try) (pCandidate >>= check)
     then fail $ "keyword " <> show x <> " cannot be an identifier"
     else return x
 
+getLineNumber :: Parser AST.LineNumber
+getLineNumber = (AST.LineNumber . MP.unPos . MP.sourceLine) <$> getSourcePos
+
 pValue :: Parser Expression
-pValue = Value <$> pIdentifier
+pValue = do
+  lineNumber <- getLineNumber
+  identifier <- pIdentifier
+  return $ Value $ AST.Value' identifier lineNumber
 
 operatorTable :: [[Operator Parser Expression]]
 operatorTable =
@@ -107,9 +113,9 @@ prefix name f = Prefix (f <$ symbol name)
 pVal :: Parser Expression
 pVal = do
   pKeyword "val"
-  lineNum    <- (MP.unPos . MP.sourceLine) <$> getSourcePos
+  lineNumber <- getLineNumber
   identifier <- pIdentifier
   symbol "="
   boundValue <- pExpression
   body       <- pExpression
-  return $ ValBinding $ AST.ValBinding' identifier lineNum boundValue body
+  return $ ValBinding $ AST.ValBinding' identifier lineNumber boundValue body

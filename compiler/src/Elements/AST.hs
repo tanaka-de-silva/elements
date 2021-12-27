@@ -71,18 +71,28 @@ newtype Identifier = Identifier { unwrapIndentifier :: Text }
 instance IsString Identifier where
   fromString = Identifier . Text.pack
 
+newtype LineNumber = LineNumber { unwrapLineNumber :: Int }
+  deriving newtype (Eq, Show, Num, ToJSON)
+
 data ValBinding' = ValBinding'
-  { identifier :: Identifier
-  , lineNum    :: Int
-  , boundExpr  :: Expression
-  , baseExpr   :: Expression
+  { vbIdentifier :: Identifier
+  , vbLineNum    :: LineNumber
+  , vbBoundExpr  :: Expression
+  , vbBaseExpr   :: Expression
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass ToJSON
+
+data Value' = Value'
+  { vIdentifier :: Identifier
+  , vLineNum    :: LineNumber
   }
   deriving stock (Show, Eq, Generic)
   deriving anyclass ToJSON
 
 data Expression = NumericLiteral NumericValue
                 | BoolLiteral Bool
-                | Value Identifier
+                | Value Value'
                 | Negate Expression
                 | BinaryArithOp BinaryArithOp'
                 | BinaryLogicalOp BinaryLogicalOp'
@@ -91,6 +101,9 @@ data Expression = NumericLiteral NumericValue
                 | ValBinding ValBinding'
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
+
+value :: Identifier -> LineNumber -> Expression
+value i l = Value $ Value' i l
 
 -- Binary arithmetic operators
 

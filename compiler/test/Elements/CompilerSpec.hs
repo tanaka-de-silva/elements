@@ -148,11 +148,12 @@ simpleIfElse =
 simpleValBinding :: IO ()
 simpleValBinding =
   let
-    program = AST.ValBinding $ AST.ValBinding' { AST.identifier = "x"
-                                               , AST.lineNum    = 1
-                                               , AST.boundExpr  = int 1
-                                               , AST.baseExpr   = AST.Value "x"
-                                               }
+    program = AST.ValBinding $ AST.ValBinding'
+      { AST.vbIdentifier = "x"
+      , AST.vbLineNum    = 1
+      , AST.vbBoundExpr  = int 1
+      , AST.vbBaseExpr   = AST.value "x" 2
+      }
     result   = testExpression program
     expected = [Bytecode.PushInt 1, Bytecode.StoreLocal 0, Bytecode.GetLocal 0]
   in
@@ -160,25 +161,26 @@ simpleValBinding =
 
 undefinedValueRef :: IO ()
 undefinedValueRef =
-  let program  = AST.Value "x"
+  let program  = AST.value "x" 1
       result   = testExpression program
-      expected = CompilerT.UndefinedValueError "x"
+      expected = CompilerT.UndefinedValueError "x" 1
   in  result `shouldBe` Left expected
 
 multipleValBindings :: IO ()
 multipleValBindings =
   let innerBinding = AST.ValBinding $ AST.ValBinding'
-        { AST.identifier = "y"
-        , AST.lineNum    = 2
-        , AST.boundExpr  = int 2
-        , AST.baseExpr   = AST.add (AST.Value "x") (AST.Value "y")
+        { AST.vbIdentifier = "y"
+        , AST.vbLineNum    = 2
+        , AST.vbBoundExpr  = int 2
+        , AST.vbBaseExpr   = AST.add (AST.value "x" 3) (AST.value "y" 3)
         }
 
-      program = AST.ValBinding $ AST.ValBinding' { AST.identifier = "x"
-                                                 , AST.lineNum    = 1
-                                                 , AST.boundExpr  = int 1
-                                                 , AST.baseExpr   = innerBinding
-                                                 }
+      program = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 1
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = innerBinding
+        }
 
       result = testExpression program
       expected =
@@ -195,17 +197,18 @@ multipleValBindings =
 duplicateValueDefinition :: IO ()
 duplicateValueDefinition =
   let innerBinding = AST.ValBinding $ AST.ValBinding'
-        { AST.identifier = "x"
-        , AST.lineNum    = 2
-        , AST.boundExpr  = int 2
-        , AST.baseExpr   = AST.Value "x"
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 2
+        , AST.vbBoundExpr  = int 2
+        , AST.vbBaseExpr   = AST.value "x" 3
         }
 
-      program = AST.ValBinding $ AST.ValBinding' { AST.identifier = "x"
-                                                 , AST.lineNum    = 1
-                                                 , AST.boundExpr  = int 1
-                                                 , AST.baseExpr   = innerBinding
-                                                 }
+      program = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 1
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = innerBinding
+        }
       result = testExpression program
       expected =
         CompilerT.DuplicateValueDefinitionError

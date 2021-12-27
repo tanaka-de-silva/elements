@@ -66,10 +66,10 @@ parseSingleValBinding :: IO ()
 parseSingleValBinding =
   let result   = parseExpr $ Text.unlines ["val x = 1", "x + 1"]
       expected = AST.ValBinding $ AST.ValBinding'
-        { AST.identifier = "x"
-        , AST.lineNum    = 1
-        , AST.boundExpr  = int 1
-        , AST.baseExpr   = AST.add (AST.Value "x") (int 1)
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 1
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = AST.add (AST.value "x" 2) (int 1)
         }
   in  result `shouldBe` Right expected
 
@@ -77,16 +77,17 @@ parseMultipleValBindings :: IO ()
 parseMultipleValBindings =
   let result = parseExpr $ Text.unlines ["val x = 1", "val y = 2", "x + y"]
       innerBinding = AST.ValBinding $ AST.ValBinding'
-        { AST.identifier = "y"
-        , AST.lineNum    = 2
-        , AST.boundExpr  = int 2
-        , AST.baseExpr   = AST.add (AST.Value "x") (AST.Value "y")
+        { AST.vbIdentifier = "y"
+        , AST.vbLineNum    = 2
+        , AST.vbBoundExpr  = int 2
+        , AST.vbBaseExpr   = AST.add (AST.value "x" 3) (AST.value "y" 3)
         }
-      expected = AST.ValBinding $ AST.ValBinding' { AST.identifier = "x"
-                                                  , AST.lineNum    = 1
-                                                  , AST.boundExpr  = int 1
-                                                  , AST.baseExpr = innerBinding
-                                                  }
+      expected = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 1
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = innerBinding
+        }
   in  result `shouldBe` Right expected
 
 spec :: Spec

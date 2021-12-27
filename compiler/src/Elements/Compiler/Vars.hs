@@ -14,14 +14,16 @@ import qualified Data.HashMap.Strict           as HashMap
 import           GHC.Generics                   ( Generic )
 import           GHC.Int                        ( Int32 )
 
-import           Elements.AST                   ( Identifier(..) )
+import           Elements.AST                   ( Identifier(..)
+                                                , LineNumber
+                                                )
 
 newtype LocalVarIndex = LocalVarIndex Int32
   deriving newtype (Eq, Show, Num, ToJSON)
 
 data VarInfo = VarInfo
   { localVarIndex :: LocalVarIndex
-  , lineNum       :: Int
+  , lineNum       :: LineNumber
   }
 
 data Vars = Vars
@@ -32,7 +34,7 @@ data Vars = Vars
 empty :: Vars
 empty = Vars { identifiers = HashMap.empty, nextIndex = 0 }
 
-addVar :: Identifier -> Int -> Vars -> (LocalVarIndex, Vars)
+addVar :: Identifier -> LineNumber -> Vars -> (LocalVarIndex, Vars)
 addVar identifier lNum (Vars currentIdentifiers n) =
   let varIndex       = LocalVarIndex n
       varInfo        = VarInfo varIndex lNum
