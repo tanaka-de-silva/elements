@@ -4,9 +4,9 @@ use std::io;
 use std::io::Read;
 use std::path::Path;
 mod interpreter;
-mod values;
-mod stack;
 mod program;
+mod stack;
+mod values;
 
 fn read_file_as_string(path: &Path) -> Result<String, io::Error> {
     let mut file = File::open(path)?;
@@ -20,8 +20,7 @@ fn run_program(path: &Path) -> () {
         Err(cause) => panic!("couldn't read {}: {}", path.display(), cause),
         Ok(contents) => {
             let decoded: program::Program = serde_json::from_str(&contents).unwrap();
-            let result = interpreter::evalute(&decoded.bytecodes);
-            println!("{:?}", decoded);
+            let result = interpreter::evalute(&decoded.bytecodes).pop_int();
             println!("{:?}", result);
         }
     }
@@ -30,6 +29,5 @@ fn run_program(path: &Path) -> () {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = Path::new(&args[1]);
-    println!("{:?}", file_path);
     run_program(&file_path)
 }

@@ -6,9 +6,13 @@ import           Data.String                    ( IsString(..) )
 import           Data.Text                      ( Text )
 import qualified Data.Text                     as Text
 import           GHC.Generics                   ( Generic )
-import           GHC.Int                        ( Int32 )
+import           GHC.Int                        ( Int32
+                                                , Int64
+                                                )
 
-newtype NumericValue = IntValue Int32
+data NumericValue = IntValue Int32
+                  | LongValue Int64
+                  | DoubleValue Double
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
@@ -93,7 +97,7 @@ data Value' = Value'
 data Expression = NumericLiteral NumericValue
                 | BoolLiteral Bool
                 | Value Value'
-                | Negate Expression
+                | UnaryMinus Expression
                 | BinaryArithOp BinaryArithOp'
                 | BinaryLogicalOp BinaryLogicalOp'
                 | Comparison Comparison'

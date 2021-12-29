@@ -8,7 +8,10 @@ import qualified Elements.AST                  as AST
 import           Elements.Parser                ( TextParseError
                                                 , pExpression
                                                 )
-import           Elements.Syntax                ( int )
+import           Elements.Syntax                ( double
+                                                , int
+                                                , long
+                                                )
 import           Test.Hspec
 import qualified Text.Megaparsec               as Megaparsec
 
@@ -17,6 +20,12 @@ parseExpr = Megaparsec.runParser pExpression "ParserSpec.hs"
 
 parseIntegers :: IO ()
 parseIntegers = parseExpr "1" `shouldBe` Right (int 1)
+
+parseLongs :: IO ()
+parseLongs = parseExpr "1L" `shouldBe` Right (long 1)
+
+parseDoubles :: IO ()
+parseDoubles = parseExpr "1.0" `shouldBe` Right (double 1)
 
 parseBooleans :: IO ()
 parseBooleans = do
@@ -47,7 +56,7 @@ parseComparisons = do
   parseExpr "3 != 2" `shouldBe` Right (AST.notEquals (int 3) (int 2))
 
 parseNegation :: IO ()
-parseNegation = parseExpr "-1" `shouldBe` Right (AST.Negate (int 1))
+parseNegation = parseExpr "-1" `shouldBe` Right (AST.UnaryMinus (int 1))
 
 parsePostivePrefix :: IO ()
 parsePostivePrefix = parseExpr "+1" `shouldBe` Right (int 1)
@@ -93,6 +102,8 @@ parseMultipleValBindings =
 spec :: Spec
 spec = do
   it "can parse integers"                       parseIntegers
+  it "can parse longs"                          parseLongs
+  it "can parse doubles"                        parseDoubles
   it "can parse booleans"                       parseBooleans
   it "can parses binary arithmetic expressions" parseBinaryArithmetic
   it "can parses binary logical expressions"    parseBinaryLogical

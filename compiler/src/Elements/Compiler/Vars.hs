@@ -1,6 +1,5 @@
 module Elements.Compiler.Vars
-  ( LocalVarIndex(..)
-  , VarInfo(..)
+  ( VarInfo(..)
   , Vars
   , empty
   , addVar
@@ -17,13 +16,14 @@ import           GHC.Int                        ( Int32 )
 import           Elements.AST                   ( Identifier(..)
                                                 , LineNumber
                                                 )
-
-newtype LocalVarIndex = LocalVarIndex Int32
-  deriving newtype (Eq, Show, Num, ToJSON)
+import           Elements.Compiler.Types        ( DataType
+                                                , LocalVarIndex(..)
+                                                )
 
 data VarInfo = VarInfo
   { localVarIndex :: LocalVarIndex
   , lineNum       :: LineNumber
+  , dataType      :: DataType
   }
 
 data Vars = Vars
@@ -34,10 +34,10 @@ data Vars = Vars
 empty :: Vars
 empty = Vars { identifiers = HashMap.empty, nextIndex = 0 }
 
-addVar :: Identifier -> LineNumber -> Vars -> (LocalVarIndex, Vars)
-addVar identifier lNum (Vars currentIdentifiers n) =
+addVar :: Identifier -> LineNumber -> DataType -> Vars -> (LocalVarIndex, Vars)
+addVar identifier lNum dType (Vars currentIdentifiers n) =
   let varIndex       = LocalVarIndex n
-      varInfo        = VarInfo varIndex lNum
+      varInfo        = VarInfo varIndex lNum dType
       newIdentifiers = HashMap.insert identifier varInfo currentIdentifiers
   in  (varIndex, Vars newIdentifiers (n + 1))
 

@@ -31,9 +31,6 @@ lexeme = MCL.lexeme spaceConsumer
 symbol :: Text -> Parser Text
 symbol = MCL.symbol spaceConsumer
 
-pInteger :: Parser Expression
-pInteger = NumericLiteral . AST.IntValue <$> lexeme MCL.decimal
-
 pBool :: Parser Expression
 pBool = lexeme $ trueParser <|> falseParser
  where
@@ -72,7 +69,7 @@ pValue = do
 
 operatorTable :: [[Operator Parser Expression]]
 operatorTable =
-  [ [prefix "-" Negate, prefix "+" id]
+  [ [prefix "-" AST.UnaryMinus, prefix "+" id]
   , [binary "*" AST.multiply, binary "/" AST.divide]
   , [binary "+" AST.add, binary "-" AST.subtract]
   , [ binary "==" AST.equals
@@ -85,8 +82,21 @@ operatorTable =
   , [binary "&&" AST.and, binary "||" AST.or]
   ]
 
+pInteger :: Parser Expression
+pInteger = NumericLiteral . AST.IntValue <$> lexeme
+  (MCL.decimal <* notFollowedBy (MC.char 'L'))
+
+pLong :: Parser Expression
+pLong = NumericLiteral . AST.LongValue <$> lexeme (MCL.decimal <* MC.char 'L')
+
+pDouble :: Parser Expression
+pDouble = NumericLiteral . AST.DoubleValue <$> lexeme MCL.float
+
+pNumeric :: Parser Expression
+pNumeric = choice [try pDouble, try pInteger, pLong]
+
 pTerm :: Parser Expression
-pTerm = choice [pInteger, pBool, pValue]
+pTerm = choice [pNumeric, pBool, pValue]
 
 pExpression :: Parser Expression
 pExpression = makeExprParser pTerm operatorTable <|> pIfElse <|> pVal

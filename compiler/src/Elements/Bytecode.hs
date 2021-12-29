@@ -1,30 +1,42 @@
 module Elements.Bytecode where
 
 import           Data.Aeson                     ( ToJSON )
-import           Elements.Compiler.Vars         ( LocalVarIndex )
+import           Elements.Compiler.Types        ( LocalVarIndex
+                                                , NumericType
+                                                )
 import           GHC.Generics                   ( Generic )
-import           GHC.Int                        ( Int32 )
+import           GHC.Int                        ( Int32
+                                                , Int64
+                                                )
 
 newtype PCOffset = PCOffset Int32
   deriving newtype (Eq, Show, Num, ToJSON)
 
 data Bytecode = PushInt Int32
-              | Add
-              | Subtract
-              | Multiply
-              | Divide
-              | Negate
-              | LessThan
-              | LessThanOrEquals
-              | Equals
-              | GreaterThanOrEquals
-              | GreaterThan
-              | NotEquals
+              | PushLong Int64
+              | PushDouble Double
+              | Add NumericType
+              | Subtract NumericType
+              | Multiply NumericType
+              | Divide NumericType
+              | Negate NumericType
+              | LessThan NumericType
+              | LessThanOrEquals NumericType
+              | Equals NumericType
+              | GreaterThanOrEquals NumericType
+              | GreaterThan NumericType
+              | NotEquals NumericType
               | And
               | Or
               | BranchIfFalse PCOffset
               | Goto PCOffset
               | StoreLocal LocalVarIndex
               | GetLocal LocalVarIndex
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSON)
+
+newtype Program = Program
+  { bytecodes :: [Bytecode]
+  }
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
