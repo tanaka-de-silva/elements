@@ -332,7 +332,7 @@ mod tests {
       Bytecode::Negate,
     ];
     let result = evalute(&bytecodes);
-    assert_eq!(result, 7);
+    assert_eq!(result, -1);
   }
 
   #[test]
