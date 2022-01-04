@@ -10,7 +10,7 @@ impl Stack {
     }
 
     pub fn top(&self) -> VmValue {
-        self.values[0]
+        *self.values.last().unwrap()
     }
 
     pub fn pop(&mut self) -> Option<VmValue> {
