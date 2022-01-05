@@ -198,7 +198,7 @@ printCompilerError = \case
           <> " in line "
           <> show lNum
           <> " has not been defined"
-  
+
   UndefinedOperatorError -> "the operator is not defined"
 
 compile :: FilePath -> IO ()
