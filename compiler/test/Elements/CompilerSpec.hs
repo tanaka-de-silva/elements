@@ -11,19 +11,39 @@ import           Elements.Bytecode              ( Bytecode )
 import           Elements.Compiler              ( compileExpression )
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )
-import           Elements.Compiler.Types        ( CompileError )
+import           Elements.Compiler.Types        ( CompileError
+                                                , NumericType(..)
+                                                )
 import qualified Elements.Compiler.Types       as CompilerT
 import qualified Elements.Compiler.Vars        as Vars
-import           Elements.Syntax                ( int )
+import           Elements.Syntax                ( double
+                                                , int
+                                                , long
+                                                )
 
 testExpression :: AST.Expression -> Either CompileError [Bytecode]
-testExpression = fmap Fragment.toList . compileExpression
+testExpression expr =
+  (Fragment.toList . snd) <$> compileExpression Vars.empty expr
 
 pushIntegerValue :: IO ()
 pushIntegerValue =
   let program  = int 1
       result   = testExpression program
       expected = [Bytecode.PushInt 1]
+  in  result `shouldBe` Right expected
+
+pushLongValue :: IO ()
+pushLongValue =
+  let program  = long 1
+      result   = testExpression program
+      expected = [Bytecode.PushLong 1]
+  in  result `shouldBe` Right expected
+
+pushDoubleValue :: IO ()
+pushDoubleValue =
+  let program  = double 1
+      result   = testExpression program
+      expected = [Bytecode.PushDouble 1]
   in  result `shouldBe` Right expected
 
 pushBooleanValue :: IO ()
@@ -33,52 +53,69 @@ pushBooleanValue = do
 
 addition :: IO ()
 addition =
-  let program  = AST.add (int 1) (int 2)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.Add]
-  in  result `shouldBe` Right expected
+  let
+    program  = AST.add (int 1) (int 2)
+    result   = testExpression program
+    expected = [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.Add IntType]
+  in
+    result `shouldBe` Right expected
 
 subtraction :: IO ()
 subtraction =
-  let program  = AST.subtract (int 3) (int 1)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 3, Bytecode.PushInt 1, Bytecode.Subtract]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.subtract (int 3) (int 1)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 3, Bytecode.PushInt 1, Bytecode.Subtract IntType]
+  in
+    result `shouldBe` Right expected
 
 multiplication :: IO ()
 multiplication =
-  let program  = AST.multiply (int 2) (int 3)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 2, Bytecode.PushInt 3, Bytecode.Multiply]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.multiply (int 2) (int 3)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 2, Bytecode.PushInt 3, Bytecode.Multiply IntType]
+  in
+    result `shouldBe` Right expected
 
 division :: IO ()
 division =
-  let program  = AST.divide (int 4) (int 2)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 4, Bytecode.PushInt 2, Bytecode.Divide]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.divide (int 4) (int 2)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 4, Bytecode.PushInt 2, Bytecode.Divide IntType]
+  in
+    result `shouldBe` Right expected
 
 negation :: IO ()
 negation =
-  let program  = AST.Negate (int 1)
+  let program  = AST.UnaryMinus (int 1)
       result   = testExpression program
-      expected = [Bytecode.PushInt 1, Bytecode.Negate]
+      expected = [Bytecode.PushInt 1, Bytecode.Negate IntType]
   in  result `shouldBe` Right expected
 
 checkEquality :: IO ()
 checkEquality =
-  let program  = AST.equals (int 1) (int 1)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 1, Bytecode.PushInt 1, Bytecode.Equals]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.equals (int 1) (int 1)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 1, Bytecode.PushInt 1, Bytecode.Equals IntType]
+  in
+    result `shouldBe` Right expected
 
 checkLessThan :: IO ()
 checkLessThan =
-  let program  = AST.lessThan (int 1) (int 2)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.LessThan]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.lessThan (int 1) (int 2)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.LessThan IntType]
+  in
+    result `shouldBe` Right expected
 
 checkLessThanOrEqual :: IO ()
 checkLessThanOrEqual =
@@ -86,33 +123,43 @@ checkLessThanOrEqual =
     program = AST.lessThanOrEquals (int 1) (int 2)
     result  = testExpression program
     expected =
-      [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.LessThanOrEquals]
+      [ Bytecode.PushInt 1
+      , Bytecode.PushInt 2
+      , Bytecode.LessThanOrEquals IntType
+      ]
   in
     result `shouldBe` Right expected
 
 checkGreaterThan :: IO ()
 checkGreaterThan =
-  let
-    program  = AST.greaterThan (int 2) (int 1)
-    result   = testExpression program
-    expected = [Bytecode.PushInt 2, Bytecode.PushInt 1, Bytecode.GreaterThan]
-  in
-    result `shouldBe` Right expected
+  let program = AST.greaterThan (int 2) (int 1)
+      result  = testExpression program
+      expected =
+        [Bytecode.PushInt 2, Bytecode.PushInt 1, Bytecode.GreaterThan IntType]
+  in  result `shouldBe` Right expected
 
 checkGreaterOrEqual :: IO ()
 checkGreaterOrEqual =
-  let program = AST.greaterThanOrEquals (int 2) (int 1)
-      result  = testExpression program
-      expected =
-        [Bytecode.PushInt 2, Bytecode.PushInt 1, Bytecode.GreaterThanOrEquals]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.greaterThanOrEquals (int 2) (int 1)
+    result  = testExpression program
+    expected =
+      [ Bytecode.PushInt 2
+      , Bytecode.PushInt 1
+      , Bytecode.GreaterThanOrEquals IntType
+      ]
+  in
+    result `shouldBe` Right expected
 
 checkInequality :: IO ()
 checkInequality =
-  let program  = AST.notEquals (int 1) (int 2)
-      result   = testExpression program
-      expected = [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.NotEquals]
-  in  result `shouldBe` Right expected
+  let
+    program = AST.notEquals (int 1) (int 2)
+    result  = testExpression program
+    expected =
+      [Bytecode.PushInt 1, Bytecode.PushInt 2, Bytecode.NotEquals IntType]
+  in
+    result `shouldBe` Right expected
 
 conjuction :: IO ()
 conjuction =
@@ -190,7 +237,7 @@ multipleValBindings =
         , Bytecode.StoreLocal 1
         , Bytecode.GetLocal 0
         , Bytecode.GetLocal 1
-        , Bytecode.Add
+        , Bytecode.Add IntType
         ]
   in  result `shouldBe` Right expected
 
@@ -222,6 +269,8 @@ duplicateValueDefinition =
 spec :: Spec
 spec = do
   it "can push an integer value on to the stack" pushIntegerValue
+  it "can push an long value on to the stack"    pushLongValue
+  it "can push an double value on to the stack"  pushDoubleValue
   it "can push a boolean value on to the stack"  pushBooleanValue
   it "can add two numbers together"              addition
   it "can subtract one number from another"      subtraction

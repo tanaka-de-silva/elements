@@ -3,24 +3,29 @@ module Elements.Compiler.Types where
 import           Data.Aeson                     ( ToJSON )
 import           Data.HashMap.Strict            ( HashMap )
 import           GHC.Generics                   ( Generic )
+import           GHC.Int                        ( Int32 )
 
 import qualified Elements.AST                  as AST
-import           Elements.Bytecode              ( Bytecode )
 
-newtype Program = Program
-  { bytecodes :: [Bytecode]
-  }
+newtype LocalVarIndex = LocalVarIndex Int32
+  deriving newtype (Eq, Show, Num, ToJSON)
+
+data NumericType = IntType
+                 | LongType
+                 | DoubleType
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 
-data DataType = BoolType
-              | IntType
+data DataType = NumericType NumericType
+              | BoolType
   deriving (Show, Eq)
 
 showDataType :: DataType -> String
 showDataType = \case
   BoolType -> "Bool"
-  IntType -> "Int"
+  NumericType IntType -> "Int"
+  NumericType LongType -> "Long"
+  NumericType DoubleType -> "Double"
 
 data DuplicateValueDefinitionError' = DuplicateValueDefinitionError'
   { duplicateVal :: AST.Identifier
@@ -36,6 +41,7 @@ data TypeError' = TypeError'
 
 data CompileError = DuplicateValueDefinitionError DuplicateValueDefinitionError'
                   | UndefinedValueError AST.Identifier AST.LineNumber
+                  | UndefinedOperatorError
                   | TypeError TypeError'
                     deriving (Show, Eq)
 

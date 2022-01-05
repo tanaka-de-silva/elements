@@ -9,7 +9,8 @@
             "contents": 2
         },
         {
-            "tag": "Add"
+            "tag": "Add",
+            "contents": "IntType"
         },
         {
             "tag": "StoreLocal",
@@ -24,7 +25,8 @@
             "contents": 2
         },
         {
-            "tag": "GreaterThan"
+            "tag": "GreaterThan",
+            "contents": "IntType"
         },
         {
             "tag": "BranchIfFalse",
@@ -55,7 +57,8 @@
             "contents": 1
         },
         {
-            "tag": "Multiply"
+            "tag": "Multiply",
+            "contents": "IntType"
         }
     ]
 }

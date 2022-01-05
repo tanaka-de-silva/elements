@@ -15,13 +15,14 @@ import qualified Text.Megaparsec               as Megaparsec
 import qualified Elements.AST                  as AST
 import           Elements.Bytecode              ( Bytecode
                                                 , PCOffset(..)
+                                                , Program(..)
                                                 )
 import qualified Elements.Bytecode             as Bytecode
 import qualified Elements.Compiler.Fragment    as Fragment
 import           Elements.Compiler.Fragment     ( Fragment )
 import           Elements.Compiler.Types        ( CompileError(..)
                                                 , DataType(..)
-                                                , Program(..)
+                                                , NumericType(..)
                                                 , TypeError'(..)
                                                 , VarTypes
                                                 )
@@ -32,10 +33,16 @@ import           Elements.Parser                ( TextParseError
                                                 , pExpression
                                                 )
 
-pushNumericValue :: AST.NumericValue -> Bytecode
-pushNumericValue (AST.IntValue x) = Bytecode.PushInt x
+codeGenNumericValue :: AST.NumericValue -> (DataType, Fragment Bytecode)
+codeGenNumericValue = \case
+  AST.IntValue x ->
+    (NumericType IntType, Fragment.singleton $ Bytecode.PushInt x)
+  AST.LongValue x ->
+    (NumericType LongType, Fragment.singleton $ Bytecode.PushLong x)
+  AST.DoubleValue x ->
+    (NumericType DoubleType, Fragment.singleton $ Bytecode.PushDouble x)
 
-arithmeticOpBytecode :: AST.ArithmeticOp -> Bytecode
+arithmeticOpBytecode :: AST.ArithmeticOp -> (NumericType -> Bytecode)
 arithmeticOpBytecode = \case
   AST.Add      -> Bytecode.Add
   AST.Subtract -> Bytecode.Subtract
@@ -47,7 +54,7 @@ logicalOpBytecode = \case
   AST.And -> Bytecode.And
   AST.Or  -> Bytecode.Or
 
-comparisonOpBytecode :: AST.ComparisonOp -> Bytecode
+comparisonOpBytecode :: AST.ComparisonOp -> (NumericType -> Bytecode)
 comparisonOpBytecode = \case
   AST.LessThan            -> Bytecode.LessThan
   AST.LessThanOrEquals    -> Bytecode.LessThanOrEquals
@@ -60,9 +67,6 @@ combineBinOpFragments
   :: Bytecode -> Fragment Bytecode -> Fragment Bytecode -> Fragment Bytecode
 combineBinOpFragments opBytecode lhsFragment rhsFragment =
   Fragment.append opBytecode $ lhsFragment <> rhsFragment
-
-bytecode :: Bytecode -> Fragment Bytecode
-bytecode = Fragment.singleton
 
 fragmentPCOffset :: Fragment a -> PCOffset
 fragmentPCOffset = PCOffset . fromIntegral . Fragment.length
@@ -80,117 +84,90 @@ combineIfElseFragments testFragment thenFragment elseFragment =
         <> Fragment.append gotoElseEnd thenFragment
         <> elseFragment
 
-assertExpressionType
-  :: VarTypes -> DataType -> AST.Expression -> Either CompileError DataType
-assertExpressionType varTypes expected expr = do
-  actual <- checkExpression varTypes expr
-  if actual == expected
-    then Right expected
-    else Left $ TypeError $ TypeError' expected actual
+compileExpression
+  :: Vars -> AST.Expression -> Either CompileError (DataType, Fragment Bytecode)
+compileExpression vars = \case
+  AST.NumericLiteral value -> Right $ codeGenNumericValue value
 
-checkExpression :: VarTypes -> AST.Expression -> Either CompileError DataType
-checkExpression varTypes = \case
-  AST.NumericLiteral _                   -> Right IntType
-
-  AST.BoolLiteral    _                   -> Right BoolType
-
-  AST.Value          (AST.Value' i lNum) -> case HashMap.lookup i varTypes of
-    Nothing  -> Left $ UndefinedValueError i lNum
-    Just vti -> Right $ CompilerT.vtDataType vti
-
-  AST.Negate expr -> assertExpressionType varTypes IntType expr
-
-  AST.BinaryArithOp (AST.BinaryArithOp' _ lhs rhs) ->
-    (\_ _ -> IntType)
-      <$> assertExpressionType varTypes IntType lhs
-      <*> assertExpressionType varTypes IntType rhs
-
-  AST.BinaryLogicalOp (AST.BinaryLogicalOp' _ lhs rhs) ->
-    (\_ _ -> BoolType)
-      <$> assertExpressionType varTypes BoolType lhs
-      <*> assertExpressionType varTypes BoolType rhs
-
-  AST.Comparison (AST.Comparison' op lhs rhs) ->
-    if op `elem` [AST.Equals, AST.NotEquals]
-      then do
-        lhsType <- checkExpression varTypes lhs
-        rhsType <- checkExpression varTypes rhs
-        if lhsType == rhsType
-          then Right BoolType
-          else Left $ TypeError $ TypeError' lhsType rhsType
-      else
-        (\_ _ -> BoolType)
-        <$> assertExpressionType varTypes IntType lhs
-        <*> assertExpressionType varTypes IntType rhs
-
-  AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) -> do
-    assertExpressionType varTypes BoolType testCondition
-    thenType <- checkExpression varTypes thenExpr
-    elseType <- checkExpression varTypes elseExpr
-    if thenType == elseType
-      then Right thenType
-      else Left $ TypeError $ TypeError' thenType elseType
-
-  AST.ValBinding (AST.ValBinding' identifier lNum boundExpr baseExpr) -> do
-    case HashMap.lookup identifier varTypes of
-      Just varTypeInfo ->
-        Left
-          $ DuplicateValueDefinitionError
-          $ CompilerT.DuplicateValueDefinitionError'
-              identifier
-              (CompilerT.vtLineNum varTypeInfo)
-              lNum
-      Nothing -> do
-        boundType <- checkExpression varTypes boundExpr
-        let newVarTypeInfo = CompilerT.VarTypeInfo boundType lNum
-            modifiedVarTypes =
-              HashMap.insert identifier newVarTypeInfo varTypes
-        checkExpression modifiedVarTypes baseExpr
-
-codegen :: Vars -> AST.Expression -> Fragment Bytecode
-codegen vars = \case
-  AST.NumericLiteral value -> bytecode $ pushNumericValue value
-
-  AST.BoolLiteral value -> bytecode $ Bytecode.PushInt $ if value then 1 else 0
+  AST.BoolLiteral    value -> Right
+    (BoolType, Fragment.singleton $ Bytecode.PushInt $ if value then 1 else 0)
 
   AST.Value (AST.Value' i lNum) -> case Vars.lookupVar i vars of
-    Just vInfo -> bytecode $ Bytecode.GetLocal $ Vars.localVarIndex vInfo
-    Nothing ->
-      error $ "internal error, unexpected undefined value error " <> show
-        (AST.unwrapIndentifier i)
+    Just vInfo -> Right
+      ( Vars.dataType vInfo
+      , Fragment.singleton $ Bytecode.GetLocal $ Vars.localVarIndex vInfo
+      )
+    Nothing -> Left $ UndefinedValueError i lNum
 
-  AST.Negate expr -> Fragment.append Bytecode.Negate $ codegen vars expr
+  AST.UnaryMinus expr -> do
+    (dataType, fragment) <- compileExpression vars expr
+    case dataType of
+      NumericType nt ->
+        Right (dataType, Fragment.append (Bytecode.Negate nt) fragment)
+      BoolType -> Left UndefinedOperatorError
 
-  AST.BinaryArithOp (AST.BinaryArithOp' op lhs rhs) -> combineBinOpFragments
-    (arithmeticOpBytecode op)
-    (codegen vars lhs)
-    (codegen vars rhs)
+  AST.BinaryArithOp (AST.BinaryArithOp' op lhs rhs) -> do
+    (lType, lBytecodes) <- compileExpression vars lhs
+    (rType, rBytecodes) <- compileExpression vars rhs
+    case (lType, rType) of
+      (NumericType lnt, NumericType rnt) | lnt == rnt -> Right
+        ( lType
+        , combineBinOpFragments (arithmeticOpBytecode op lnt)
+                                lBytecodes
+                                rBytecodes
+        )
+      _ -> Left UndefinedOperatorError
 
-  AST.BinaryLogicalOp (AST.BinaryLogicalOp' op lhs rhs) ->
-    combineBinOpFragments (logicalOpBytecode op)
-                          (codegen vars lhs)
-                          (codegen vars rhs)
+  AST.BinaryLogicalOp (AST.BinaryLogicalOp' op lhs rhs) -> do
+    (lType, lBytecodes) <- compileExpression vars lhs
+    (rType, rBytecodes) <- compileExpression vars rhs
+    case (lType, rType) of
+      (BoolType, BoolType) -> Right
+        ( BoolType
+        , combineBinOpFragments (logicalOpBytecode op) lBytecodes rBytecodes
+        )
+      _ -> Left UndefinedOperatorError
 
-  AST.Comparison (AST.Comparison' op lhs rhs) -> combineBinOpFragments
-    (comparisonOpBytecode op)
-    (codegen vars lhs)
-    (codegen vars rhs)
+  AST.Comparison (AST.Comparison' op lhs rhs) -> do
+    (lType, lBytecodes) <- compileExpression vars lhs
+    (rType, rBytecodes) <- compileExpression vars rhs
+    case (lType, rType) of
+      (NumericType lnt, NumericType rnt) -> Right
+        ( BoolType
+        , combineBinOpFragments (comparisonOpBytecode op lnt)
+                                lBytecodes
+                                rBytecodes
+        )
+      _ -> Left UndefinedOperatorError
 
-  AST.IfElse (AST.IfElse' testCondition thenExpr elseExpr) ->
-    combineIfElseFragments (codegen vars testCondition)
-                           (codegen vars thenExpr)
-                           (codegen vars elseExpr)
+  AST.IfElse (AST.IfElse' testExpr thenExpr elseExpr) -> do
+    (testType, testBytecodes) <- compileExpression vars testExpr
+    (thenType, thenBytecodes) <- compileExpression vars thenExpr
+    (elseType, elseBytecodes) <- compileExpression vars elseExpr
+    if testType == BoolType
+      then if thenType == elseType
+        then Right
+          ( thenType
+          , combineIfElseFragments testBytecodes thenBytecodes elseBytecodes
+          )
+        else Left $ TypeError $ CompilerT.TypeError' thenType elseType
+      else Left $ TypeError $ CompilerT.TypeError' BoolType testType
 
   AST.ValBinding (AST.ValBinding' identifier lNum boundExpr baseExpr) ->
     case Vars.lookupVar identifier vars of
-      Just _ ->
-        error $ "internal error, unexpected duplicate value error, " <> show
-          (AST.unwrapIndentifier identifier)
-      Nothing ->
-        let (n, newVars) = Vars.addVar identifier lNum vars
+      Just varInfo ->
+        Left
+          $ DuplicateValueDefinitionError
+          $ CompilerT.DuplicateValueDefinitionError' identifier
+                                                     (Vars.lineNum varInfo)
+                                                     lNum
+      Nothing -> do
+        (boundType, boundBytecodes) <- compileExpression vars boundExpr
+        let (n, newVars) = Vars.addVar identifier lNum boundType vars
             storeLocal   = Bytecode.StoreLocal n
-        in  Fragment.append storeLocal (codegen vars boundExpr)
-              <> (codegen newVars baseExpr)
+        (baseType, baseBytecodes) <- compileExpression newVars baseExpr
+        Right
+          (baseType, Fragment.append storeLocal boundBytecodes <> baseBytecodes)
 
 parseFromFile :: FilePath -> IO (Either TextParseError AST.Expression)
 parseFromFile filePath =
@@ -221,23 +198,20 @@ printCompilerError = \case
           <> " in line "
           <> show lNum
           <> " has not been defined"
-
-compileExpression :: AST.Expression -> Either CompileError (Fragment Bytecode)
-compileExpression expression = case checkExpression HashMap.empty expression of
-  Left  e -> Left e
-  Right _ -> Right $ codegen Vars.empty expression
+  
+  UndefinedOperatorError -> "the operator is not defined"
 
 compile :: FilePath -> IO ()
 compile sourcePath = parseFromFile sourcePath >>= \case
   Left  e          -> error $ "could not parse file " <> sourcePath <> show e
-  Right expression -> case compileExpression expression of
+  Right expression -> case compileExpression Vars.empty expression of
     Left e ->
       error
         $  "could not compile file "
         <> sourcePath
         <> ", "
         <> printCompilerError e
-    Right bytecodes ->
+    Right (_, bytecodes) ->
       let
         program = Program $ Fragment.toList bytecodes
         newline = BS.c2w '\n'
