@@ -7,6 +7,10 @@ pub enum NumericType {
   DoubleType
 }
 
+type LocalVarIndex = i32;
+
+type PCOffset = i32;
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "tag", content = "contents")]
 pub enum Bytecode {
@@ -23,10 +27,14 @@ pub enum Bytecode {
   NotEquals(NumericType),
   And,
   Or,
-  StoreLocal(i32),
-  GetLocal(i32),
-  BranchIfFalse(i32),
-  Goto(i32),
+  StoreLocalInt(LocalVarIndex),
+  StoreLocalLong(LocalVarIndex),
+  StoreLocalDouble(LocalVarIndex),
+  GetLocalInt(LocalVarIndex),
+  GetLocalLong(LocalVarIndex),
+  GetLocalDouble(LocalVarIndex),
+  BranchIfFalse(PCOffset),
+  Goto(PCOffset),
   PushInt(i32),
   PushLong(i64),
   PushDouble(f64),

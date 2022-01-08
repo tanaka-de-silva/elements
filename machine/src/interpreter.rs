@@ -220,16 +220,35 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
       Some(Bytecode::Goto(i)) => {
         program_counter += i;
       }
-      Some(Bytecode::GetLocal(i)) => {
+      Some(Bytecode::GetLocalInt(i)) => {
         match locals.get(i).unwrap() {
           VmValue::IntValue(v) => stack.push_int(*v),
-          VmValue::LongValue(v) => stack.push_long(*v),
-          VmValue::DoubleValue(v) => stack.push_double(*v),
+          _ => unreachable!(),
         };
       }
-      Some(Bytecode::StoreLocal(i)) => {
+      Some(Bytecode::GetLocalLong(i)) => {
+        match locals.get(i).unwrap() {
+          VmValue::LongValue(v) => stack.push_long(*v),
+          _ => unreachable!(),
+        };
+      }
+      Some(Bytecode::GetLocalDouble(i)) => {
+        match locals.get(i).unwrap() {
+          VmValue::DoubleValue(v) => stack.push_double(*v),
+          _ => unreachable!(),
+        };
+      }
+      Some(Bytecode::StoreLocalInt(i)) => {
         let value = stack.pop_int();
         locals.insert(*i, VmValue::IntValue(value));
+      }
+      Some(Bytecode::StoreLocalLong(i)) => {
+        let value = stack.pop_long();
+        locals.insert(*i, VmValue::LongValue(value));
+      }
+      Some(Bytecode::StoreLocalDouble(i)) => {
+        let value = stack.pop_double();
+        locals.insert(*i, VmValue::DoubleValue(value));
       }
       Some(Bytecode::BranchIfFalse(i)) => {
         let value = stack.pop_bool();
@@ -493,12 +512,12 @@ mod tests {
   fn can_store_and_get_local_values() {
     let bytecodes = vec![
       Bytecode::PushInt(1),
-      Bytecode::StoreLocal(0),
+      Bytecode::StoreLocalInt(0),
       Bytecode::PushInt(3),
-      Bytecode::StoreLocal(1),
-      Bytecode::GetLocal(0),
-      Bytecode::GetLocal(0),
-      Bytecode::GetLocal(1),
+      Bytecode::StoreLocalInt(1),
+      Bytecode::GetLocalInt(0),
+      Bytecode::GetLocalInt(0),
+      Bytecode::GetLocalInt(1),
       Bytecode::Add(NumericType::IntType),
       Bytecode::Add(NumericType::IntType),
     ];

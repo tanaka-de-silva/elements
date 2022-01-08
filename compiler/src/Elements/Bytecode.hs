@@ -30,8 +30,12 @@ data Bytecode = PushInt Int32
               | Or
               | BranchIfFalse PCOffset
               | Goto PCOffset
-              | StoreLocal LocalVarIndex
-              | GetLocal LocalVarIndex
+              | StoreLocalInt LocalVarIndex
+              | StoreLocalLong LocalVarIndex
+              | StoreLocalDouble LocalVarIndex
+              | GetLocalInt LocalVarIndex
+              | GetLocalLong LocalVarIndex
+              | GetLocalDouble LocalVarIndex
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSON)
 

@@ -9,6 +9,7 @@ import qualified Data.ByteString.Internal      as BS
 import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as HashMap
 import qualified Data.Text.IO                  as TextIO
+import           GHC.Int                        ( Int32 )
 import qualified System.FilePath.Posix         as System
 import qualified Text.Megaparsec               as Megaparsec
 
@@ -71,6 +72,9 @@ combineBinOpFragments opBytecode lhsFragment rhsFragment =
 fragmentPCOffset :: Fragment a -> PCOffset
 fragmentPCOffset = PCOffset . fromIntegral . Fragment.length
 
+boolToInt :: Bool -> Int32
+boolToInt value = if value then 1 else 0
+
 combineIfElseFragments
   :: Fragment Bytecode
   -> Fragment Bytecode
@@ -89,14 +93,19 @@ compileExpression
 compileExpression vars = \case
   AST.NumericLiteral value -> Right $ codeGenNumericValue value
 
-  AST.BoolLiteral    value -> Right
-    (BoolType, Fragment.singleton $ Bytecode.PushInt $ if value then 1 else 0)
+  AST.BoolLiteral value ->
+    Right (BoolType, Fragment.singleton $ Bytecode.PushInt $ boolToInt value)
 
   AST.Value (AST.Value' i lNum) -> case Vars.lookupVar i vars of
-    Just vInfo -> Right
-      ( Vars.dataType vInfo
-      , Fragment.singleton $ Bytecode.GetLocal $ Vars.localVarIndex vInfo
-      )
+    Just vInfo ->
+      let dataType = Vars.dataType vInfo
+          index    = Vars.localVarIndex vInfo
+          getLocal = case dataType of
+            BoolType               -> Bytecode.GetLocalInt
+            NumericType IntType    -> Bytecode.GetLocalInt
+            NumericType LongType   -> Bytecode.GetLocalLong
+            NumericType DoubleType -> Bytecode.GetLocalDouble
+      in  Right (dataType, Fragment.singleton $ getLocal index)
     Nothing -> Left $ UndefinedValueError i lNum
 
   AST.UnaryMinus expr -> do
@@ -164,10 +173,16 @@ compileExpression vars = \case
       Nothing -> do
         (boundType, boundBytecodes) <- compileExpression vars boundExpr
         let (n, newVars) = Vars.addVar identifier lNum boundType vars
-            storeLocal   = Bytecode.StoreLocal n
+            storeLocal   = case boundType of
+              BoolType               -> Bytecode.StoreLocalInt
+              NumericType IntType    -> Bytecode.StoreLocalInt
+              NumericType LongType   -> Bytecode.StoreLocalLong
+              NumericType DoubleType -> Bytecode.StoreLocalDouble
         (baseType, baseBytecodes) <- compileExpression newVars baseExpr
         Right
-          (baseType, Fragment.append storeLocal boundBytecodes <> baseBytecodes)
+          ( baseType
+          , Fragment.append (storeLocal n) boundBytecodes <> baseBytecodes
+          )
 
 parseFromFile :: FilePath -> IO (Either TextParseError AST.Expression)
 parseFromFile filePath =

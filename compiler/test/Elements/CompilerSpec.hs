@@ -194,17 +194,16 @@ simpleIfElse =
 
 simpleValBinding :: IO ()
 simpleValBinding =
-  let
-    program = AST.ValBinding $ AST.ValBinding'
-      { AST.vbIdentifier = "x"
-      , AST.vbLineNum    = 1
-      , AST.vbBoundExpr  = int 1
-      , AST.vbBaseExpr   = AST.value "x" 2
-      }
-    result   = testExpression program
-    expected = [Bytecode.PushInt 1, Bytecode.StoreLocal 0, Bytecode.GetLocal 0]
-  in
-    result `shouldBe` Right expected
+  let program = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 1
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = AST.value "x" 2
+        }
+      result = testExpression program
+      expected =
+        [Bytecode.PushInt 1, Bytecode.StoreLocalInt 0, Bytecode.GetLocalInt 0]
+  in  result `shouldBe` Right expected
 
 undefinedValueRef :: IO ()
 undefinedValueRef =
@@ -232,11 +231,11 @@ multipleValBindings =
       result = testExpression program
       expected =
         [ Bytecode.PushInt 1
-        , Bytecode.StoreLocal 0
+        , Bytecode.StoreLocalInt 0
         , Bytecode.PushInt 2
-        , Bytecode.StoreLocal 1
-        , Bytecode.GetLocal 0
-        , Bytecode.GetLocal 1
+        , Bytecode.StoreLocalInt 1
+        , Bytecode.GetLocalInt 0
+        , Bytecode.GetLocalInt 1
         , Bytecode.Add IntType
         ]
   in  result `shouldBe` Right expected

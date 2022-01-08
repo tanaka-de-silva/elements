@@ -13,11 +13,11 @@
             "contents": "IntType"
         },
         {
-            "tag": "StoreLocal",
+            "tag": "StoreLocalInt",
             "contents": 0
         },
         {
-            "tag": "GetLocal",
+            "tag": "GetLocalInt",
             "contents": 0
         },
         {
@@ -45,15 +45,15 @@
             "contents": 1
         },
         {
-            "tag": "StoreLocal",
+            "tag": "StoreLocalInt",
             "contents": 1
         },
         {
-            "tag": "GetLocal",
+            "tag": "GetLocalInt",
             "contents": 0
         },
         {
-            "tag": "GetLocal",
+            "tag": "GetLocalInt",
             "contents": 1
         },
         {
