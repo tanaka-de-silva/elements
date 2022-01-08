@@ -4,12 +4,14 @@ use serde::{Deserialize, Serialize};
 pub enum NumericType {
   IntType,
   LongType,
-  DoubleType
+  DoubleType,
 }
 
-type LocalVarIndex = i32;
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct LocalVarIndex(pub i32);
 
-type PCOffset = i32;
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct PCOffset(pub i32);
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "tag", content = "contents")]

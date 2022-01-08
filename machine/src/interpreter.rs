@@ -1,11 +1,11 @@
-use super::program::{Bytecode, NumericType};
+use super::program::{Bytecode, LocalVarIndex, NumericType, PCOffset};
 use super::stack::Stack;
 use super::values::VmValue;
 use std::collections::HashMap;
 
 pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
   let mut stack: Stack = Stack::new();
-  let mut locals: HashMap<i32, VmValue> = HashMap::new();
+  let mut locals: HashMap<LocalVarIndex, VmValue> = HashMap::new();
   let mut program_counter = 0;
   loop {
     match bytecodes.get(program_counter as usize) {
@@ -217,7 +217,7 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
         let result = lhs != 0 || rhs != 0;
         stack.push_bool(result);
       }
-      Some(Bytecode::Goto(i)) => {
+      Some(Bytecode::Goto(PCOffset(i))) => {
         program_counter += i;
       }
       Some(Bytecode::GetLocalInt(i)) => {
@@ -250,7 +250,7 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
         let value = stack.pop_double();
         locals.insert(*i, VmValue::DoubleValue(value));
       }
-      Some(Bytecode::BranchIfFalse(i)) => {
+      Some(Bytecode::BranchIfFalse(PCOffset(i))) => {
         let value = stack.pop_bool();
         if !value {
           program_counter += i;
@@ -469,7 +469,7 @@ mod tests {
   #[test]
   fn can_goto_an_instruction_offset() {
     let bytecodes = vec![
-      Bytecode::Goto(2),
+      Bytecode::Goto(PCOffset(2)),
       Bytecode::PushInt(1),
       Bytecode::Negate(NumericType::IntType),
       Bytecode::PushInt(2),
@@ -484,7 +484,7 @@ mod tests {
   fn can_branch_to_an_instruction_offset() {
     let bytecodes = vec![
       Bytecode::PushInt(0),
-      Bytecode::BranchIfFalse(2),
+      Bytecode::BranchIfFalse(PCOffset(2)),
       Bytecode::PushInt(1),
       Bytecode::Negate(NumericType::IntType),
       Bytecode::PushInt(2),
@@ -500,7 +500,7 @@ mod tests {
     let bytecodes = vec![
       Bytecode::PushInt(7),
       Bytecode::PushInt(1),
-      Bytecode::BranchIfFalse(2),
+      Bytecode::BranchIfFalse(PCOffset(2)),
       Bytecode::PushInt(1),
       Bytecode::Negate(NumericType::IntType),
     ];
@@ -512,12 +512,12 @@ mod tests {
   fn can_store_and_get_local_values() {
     let bytecodes = vec![
       Bytecode::PushInt(1),
-      Bytecode::StoreLocalInt(0),
+      Bytecode::StoreLocalInt(LocalVarIndex(0)),
       Bytecode::PushInt(3),
-      Bytecode::StoreLocalInt(1),
-      Bytecode::GetLocalInt(0),
-      Bytecode::GetLocalInt(0),
-      Bytecode::GetLocalInt(1),
+      Bytecode::StoreLocalInt(LocalVarIndex(1)),
+      Bytecode::GetLocalInt(LocalVarIndex(0)),
+      Bytecode::GetLocalInt(LocalVarIndex(0)),
+      Bytecode::GetLocalInt(LocalVarIndex(1)),
       Bytecode::Add(NumericType::IntType),
       Bytecode::Add(NumericType::IntType),
     ];
