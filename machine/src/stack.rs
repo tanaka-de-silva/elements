@@ -34,13 +34,13 @@ impl Stack {
         return f64::from_le_bytes(tail.try_into().unwrap());
     }
 
-    pub fn push_bool(&mut self, value: bool) -> () {
-        self.push_int(value as i32);
-    }
-
     pub fn push_int(&mut self, value: i32) -> () {
         let mut int_bytes = value.to_le_bytes().to_vec();
         self.values.append(&mut int_bytes);
+    }
+
+    pub fn push_bool(&mut self, value: bool) -> () {
+        self.push_int(value as i32);
     }
 
     pub fn push_long(&mut self, value: i64) -> () {
