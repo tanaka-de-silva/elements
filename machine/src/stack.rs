@@ -16,6 +16,10 @@ impl Stack {
         return i32::from_le_bytes(tail.try_into().unwrap());
     }
 
+    pub fn pop_bool(&mut self) -> bool {
+        return self.pop_int() != 0;
+    }
+
     pub fn pop_long(&mut self) -> i64 {
         let final_length = self.values.len().saturating_sub(std::mem::size_of::<i64>());
         let tail = self.values.split_off(final_length);
@@ -28,6 +32,10 @@ impl Stack {
         let tail = self.values.split_off(final_length);
         self.values.truncate(final_length);
         return f64::from_le_bytes(tail.try_into().unwrap());
+    }
+
+    pub fn push_bool(&mut self, value: bool) -> () {
+        self.push_int(value as i32);
     }
 
     pub fn push_int(&mut self, value: i32) -> () {

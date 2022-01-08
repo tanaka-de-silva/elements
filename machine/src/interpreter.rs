@@ -101,121 +101,121 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs == rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::Equals(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs == rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::Equals(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs == rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::NotEquals(NumericType::IntType)) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs != rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::NotEquals(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs != rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::NotEquals(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs != rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThan(NumericType::IntType)) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs < rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThan(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs < rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThan(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs < rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThanOrEquals(NumericType::IntType)) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs <= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThanOrEquals(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs <= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::LessThanOrEquals(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs <= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThan(NumericType::IntType)) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs > rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThan(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs > rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThan(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs > rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThanOrEquals(NumericType::IntType)) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs >= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThanOrEquals(NumericType::LongType)) => {
         let rhs = stack.pop_long();
         let lhs = stack.pop_long();
         let result = lhs >= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::GreaterThanOrEquals(NumericType::DoubleType)) => {
         let rhs = stack.pop_double();
         let lhs = stack.pop_double();
         let result = lhs >= rhs;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::And) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs != 0 && rhs != 0;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::Or) => {
         let rhs = stack.pop_int();
         let lhs = stack.pop_int();
         let result = lhs != 0 || rhs != 0;
-        stack.push_int(result as i32);
+        stack.push_bool(result);
       }
       Some(Bytecode::Goto(i)) => {
         program_counter += i;
@@ -232,8 +232,8 @@ pub fn evalute(bytecodes: &Vec<Bytecode>) -> Stack {
         locals.insert(*i, VmValue::IntValue(value));
       }
       Some(Bytecode::BranchIfFalse(i)) => {
-        let value = stack.pop_int();
-        if value == 0 {
+        let value = stack.pop_bool();
+        if !value {
           program_counter += i;
         }
       }
