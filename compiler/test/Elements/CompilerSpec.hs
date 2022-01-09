@@ -233,9 +233,9 @@ multipleValBindings =
         [ Bytecode.PushInt 1
         , Bytecode.StoreLocalInt 0
         , Bytecode.PushInt 2
-        , Bytecode.StoreLocalInt 1
+        , Bytecode.StoreLocalInt 4
         , Bytecode.GetLocalInt 0
-        , Bytecode.GetLocalInt 1
+        , Bytecode.GetLocalInt 4
         , Bytecode.Add IntType
         ]
   in  result `shouldBe` Right expected

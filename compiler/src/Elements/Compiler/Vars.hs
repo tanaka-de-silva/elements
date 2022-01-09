@@ -18,6 +18,7 @@ import           Elements.AST                   ( Identifier(..)
                                                 )
 import           Elements.Compiler.Types        ( DataType
                                                 , LocalVarIndex(..)
+                                                , dataTypeByteCount
                                                 )
 
 data VarInfo = VarInfo
@@ -39,7 +40,8 @@ addVar identifier lNum dType (Vars currentIdentifiers n) =
   let varIndex       = LocalVarIndex n
       varInfo        = VarInfo varIndex lNum dType
       newIdentifiers = HashMap.insert identifier varInfo currentIdentifiers
-  in  (varIndex, Vars newIdentifiers (n + 1))
+      size           = fromIntegral $ dataTypeByteCount dType
+  in  (varIndex, Vars newIdentifiers (n + size))
 
 lookupVar :: Identifier -> Vars -> Maybe VarInfo
 lookupVar x = HashMap.lookup x . identifiers

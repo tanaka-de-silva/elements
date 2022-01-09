@@ -27,6 +27,13 @@ showDataType = \case
   NumericType LongType -> "Long"
   NumericType DoubleType -> "Double"
 
+dataTypeByteCount :: DataType -> Int
+dataTypeByteCount = \case
+  BoolType -> 4 -- represented as an int
+  NumericType IntType -> 4
+  NumericType LongType -> 8
+  NumericType DoubleType -> 8
+
 data DuplicateValueDefinitionError' = DuplicateValueDefinitionError'
   { duplicateVal :: AST.Identifier
   , originalLine :: AST.LineNumber
