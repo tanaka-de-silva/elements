@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Elements.ParserSpec
   ( spec
   ) where
@@ -13,6 +15,7 @@ import           Elements.Syntax                ( double
                                                 , long
                                                 )
 import           Test.Hspec
+import           Text.InterpolatedString.Perl6  ( q )
 import qualified Text.Megaparsec               as Megaparsec
 
 parseExpr :: Text -> Either TextParseError AST.Expression
@@ -73,7 +76,10 @@ parseIfElse =
 
 parseSingleValBinding :: IO ()
 parseSingleValBinding =
-  let result   = parseExpr $ Text.unlines ["val x = 1", "x + 1"]
+  let result = parseExpr $ Text.strip [q|
+        val x = 1
+        x + 1
+      |]
       expected = AST.ValBinding $ AST.ValBinding'
         { AST.vbIdentifier = "x"
         , AST.vbLineNum    = 1
@@ -84,7 +90,11 @@ parseSingleValBinding =
 
 parseMultipleValBindings :: IO ()
 parseMultipleValBindings =
-  let result = parseExpr $ Text.unlines ["val x = 1", "val y = 2", "x + y"]
+  let result = parseExpr $ Text.strip [q| 
+        val x = 1
+        val y = 2
+        x + y
+      |]
       innerBinding = AST.ValBinding $ AST.ValBinding'
         { AST.vbIdentifier = "y"
         , AST.vbLineNum    = 2
