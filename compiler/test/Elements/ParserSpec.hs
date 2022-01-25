@@ -109,6 +109,36 @@ parseMultipleValBindings =
         }
   in  result `shouldBe` Right expected
 
+parseIfElseWithValues :: IO ()
+parseIfElseWithValues =
+  let result = parseExpr $ Text.strip [q|
+        if true
+          then
+            val x = 1
+            x
+          else
+            val x = 0
+            x
+        |]
+      thenBranch = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 3
+        , AST.vbBoundExpr  = int 1
+        , AST.vbBaseExpr   = AST.value "x" 4
+        }
+      elseBranch = AST.ValBinding $ AST.ValBinding'
+        { AST.vbIdentifier = "x"
+        , AST.vbLineNum    = 6
+        , AST.vbBoundExpr  = int 0
+        , AST.vbBaseExpr   = AST.value "x" 7
+        }
+      expected = AST.IfElse $ AST.IfElse'
+        { AST.testCondition = AST.BoolLiteral True
+        , AST.thenExpr      = thenBranch
+        , AST.elseExpr      = elseBranch
+        }
+  in  result `shouldBe` Right expected
+
 spec :: Spec
 spec = do
   it "can parse integers"                       parseIntegers
@@ -121,5 +151,6 @@ spec = do
   it "can parse a negation expression"          parseNegation
   it "can parse a poitive prefix expression"    parsePostivePrefix
   it "can parse an if else expression"          parseIfElse
+  it "can parse an if else with val bindings"   parseIfElseWithValues
   it "can parse a single val binding"           parseSingleValBinding
   it "can parse multiple val bindings"          parseMultipleValBindings
